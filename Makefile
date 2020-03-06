@@ -1,15 +1,8 @@
 VERSION = v0.6.0x
 LDFLAGS = -ldflags "-X uhppote.VERSION=$(VERSION)" 
-DIST   ?= development
 CMD     = ./bin/uhppoted-acl-s3
-
-SERIALNO ?= 405419896
-CARD     ?= 65538
-DOOR     ?= 3
-DEVICEIP ?= 192.168.1.125
-DATETIME  = $(shell date "+%Y-%m-%d %H:%M:%S")
-LISTEN   ?= 192.168.1.100:60001
-DEBUG    ?= --debug
+DIST   ?= development
+DEBUG  ?= --debug
 
 all: test      \
 	 benchmark \
@@ -68,4 +61,10 @@ help: build
 version: build
 	$(CMD) version
 
+load-acl: build
+	$(CMD) help load-acl
+	$(CMD) load-acl
 
+store-acl: build
+	$(CMD) help store-acl
+	$(CMD) store-acl
