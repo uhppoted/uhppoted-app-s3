@@ -62,8 +62,7 @@ version: build
 	$(CMD) version
 
 load-acl: build
-	$(CMD) help load-acl
-	$(CMD) load-acl
+	$(CMD) load-acl --url "https://github.com/uhppoted/uhppoted/raw/master/runtime/simulation/405419896.tar.gz"
 
 store-acl: build
 	$(CMD) help store-acl
