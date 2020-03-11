@@ -2,25 +2,31 @@ package commands
 
 import (
 	"archive/tar"
+	"bytes"
 	"compress/gzip"
 	"context"
 	"flag"
 	"fmt"
+	"github.com/uhppoted/uhppote-core/uhppote"
+	"github.com/uhppoted/uhppoted-api/acl"
+	"github.com/uhppoted/uhppoted-api/config"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"sort"
 	"strings"
 )
 
 var LOAD_ACL = LoadACL{
-	conf: DEFAULT_CONFIG,
+	config: DEFAULT_CONFIG,
 }
 
 type LoadACL struct {
-	conf string
-	url  string
+	config string
+	url    string
 }
 
 func (l *LoadACL) Name() string {
@@ -47,8 +53,8 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 	fmt.Printf("  Usage: %s load-acl --url <url>\n", SERVICE)
 	fmt.Println()
-	fmt.Printf("    Fetches the ACL file stored at the S3 URL and loads it to the controllers configured in:\n\n")
-	fmt.Printf("       %s\n", l.conf)
+	fmt.Printf("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in:\n\n")
+	fmt.Printf("       %s\n", l.config)
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
@@ -66,16 +72,38 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 		return fmt.Errorf("Invalid pre-signed S3 URL '%s' (%w)", l.url, err)
 	}
 
-	fmt.Printf(" ... fetching ACL from %v\n", uri)
+	conf := config.NewConfig()
+	if err := conf.Load(l.config); err != nil {
+		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
+	}
 
-	response, err := http.Get(uri.String())
+	keys := []uint32{}
+	for id, _ := range conf.Devices {
+		keys = append(keys, id)
+	}
+
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+
+	devices := []*uhppote.Device{}
+	for _, id := range keys {
+		d := conf.Devices[id]
+		devices = append(devices, uhppote.NewDevice(id, d.Address, d.Rollover, d.Doors))
+	}
+
+	return l.execute(uri.String(), devices)
+}
+
+func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
+	log.Printf(" ... fetching ACL from %v\n", uri)
+
+	response, err := http.Get(uri)
 	if err != nil {
 		return err
 	}
 
 	defer response.Body.Close()
 
-	f, err := ioutil.TempFile(os.TempDir(), "ubc-acl-*")
+	f, err := ioutil.TempFile(os.TempDir(), "uhppoted-acl-*")
 	if err != nil {
 		return err
 	}
@@ -87,16 +115,34 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 		return err
 	}
 
-	fmt.Printf(" ... fetched  ACL from %v (%d bytes)\n", uri, N)
+	log.Printf(" ... fetched  ACL from %v (%d bytes)\n", uri, N)
 
 	f.Close()
 
-	untar(f.Name())
+	var buffer bytes.Buffer
+
+	untar(f.Name(), &buffer)
+
+	log.Printf(" ... untar'd  ACL from %v\n", uri)
+
+	m, err := acl.ParseTSV(&buffer, devices)
+	if err != nil {
+		return err
+	}
+
+	log.Printf(" ... parsed ACL: %v\n", m)
+
+	for k, l := range m {
+		fmt.Printf(">> DEBUG: %v\n", k)
+		for cn, c := range l {
+			fmt.Printf("          %v %v\n", cn, c)
+		}
+	}
 
 	return nil
 }
 
-func untar(filepath string) error {
+func untar(filepath string, w io.Writer) error {
 	f, err := os.Open(filepath)
 	if err != nil {
 		return err
@@ -121,14 +167,12 @@ func untar(filepath string) error {
 			return err
 		}
 
-		fmt.Printf(">>> %s:\n", header.Name)
-		println("---")
-		if _, err := io.Copy(os.Stdout, tr); err != nil {
-			return err
+		switch header.Typeflag {
+		case tar.TypeReg:
+			if _, err := io.Copy(w, tr); err != nil {
+				return err
+			}
 		}
-
-		fmt.Println()
-		println("---")
 	}
 
 	return nil
