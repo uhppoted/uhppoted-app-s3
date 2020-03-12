@@ -94,7 +94,7 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 }
 
 func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
-	log.Printf(" ... fetching ACL from %v\n", uri)
+	log.Printf("Fetching ACL from %v\n", uri)
 
 	response, err := http.Get(uri)
 	if err != nil {
@@ -115,7 +115,7 @@ func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
 		return err
 	}
 
-	log.Printf(" ... fetched  ACL from %v (%d bytes)\n", uri, N)
+	log.Printf("Fetched  ACL from %v (%d bytes)\n", uri, N)
 
 	f.Close()
 
@@ -123,20 +123,15 @@ func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
 
 	untar(f.Name(), &buffer)
 
-	log.Printf(" ... untar'd  ACL from %v\n", uri)
+	log.Printf("Extracted 'd  ACL from %v\n", uri)
 
 	m, err := acl.ParseTSV(&buffer, devices)
 	if err != nil {
 		return err
 	}
 
-	log.Printf(" ... parsed ACL: %v\n", m)
-
 	for k, l := range m {
-		fmt.Printf(">> DEBUG: %v\n", k)
-		for cn, c := range l {
-			fmt.Printf("          %v %v\n", cn, c)
-		}
+		log.Printf("%v  %v records", k, len(l))
 	}
 
 	return nil
