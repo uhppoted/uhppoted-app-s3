@@ -7,6 +7,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/uhppoted/uhppote-core/device"
+	"github.com/uhppoted/uhppote-core/types"
 	"github.com/uhppoted/uhppote-core/uhppote"
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
@@ -18,15 +20,31 @@ import (
 	"os"
 	"sort"
 	"strings"
+	"text/template"
+	"time"
 )
+
+var report = `ACL DIFF REPORT {{ .DateTime }}
+{{range $id,$value := .Diffs}}
+  DEVICE {{ $id }}{{if $value.Unchanged}}
+    Unchanged: {{range $value.Unchanged}}{{.}}
+               {{end}}{{end}}{{if $value.Updated}}
+    Updated:   {{range $value.Updated}}{{.}}
+               {{end}}{{end}}{{if $value.Added}}
+    Added:     {{range $value.Added}}{{.}}
+               {{end}}{{end}}{{if $value.Deleted}}
+    Deleted:   {{range $value.Deleted}}{{.}}
+               {{end}}{{end}}{{end}}`
 
 var LOAD_ACL = LoadACL{
 	config: DEFAULT_CONFIG,
+	debug:  false,
 }
 
 type LoadACL struct {
 	config string
 	url    string
+	debug  bool
 }
 
 func (l *LoadACL) Name() string {
@@ -37,6 +55,7 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("load-acl", flag.ExitOnError)
 
 	flagset.StringVar(&l.url, "url", l.url, "The S3 URL for the ACL file")
+	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
 
 	return flagset
 }
@@ -46,7 +65,7 @@ func (l *LoadACL) Description() string {
 }
 
 func (l *LoadACL) Usage() string {
-	return "load-acl --url <S3 URL>"
+	return "load-acl [--debug] --url <S3 URL>"
 }
 
 func (l *LoadACL) Help() {
@@ -58,7 +77,8 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Println("      url  (required) Pre-signed S3 URL for the ACL file")
+	fmt.Println("      url   (required) Pre-signed S3 URL for the ACL file")
+	fmt.Println("      debug (optional) Displays verbose debug information")
 	fmt.Println()
 }
 
@@ -84,16 +104,25 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 
 	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
 
+	u := uhppote.UHPPOTE{
+		BindAddress:      conf.BindAddress,
+		BroadcastAddress: conf.BroadcastAddress,
+		ListenAddress:    conf.ListenAddress,
+		Devices:          make(map[uint32]*uhppote.Device),
+		Debug:            l.debug,
+	}
+
 	devices := []*uhppote.Device{}
 	for _, id := range keys {
 		d := conf.Devices[id]
+		u.Devices[id] = uhppote.NewDevice(id, d.Address, d.Rollover, d.Doors)
 		devices = append(devices, uhppote.NewDevice(id, d.Address, d.Rollover, d.Doors))
 	}
 
-	return l.execute(uri.String(), devices)
+	return l.execute(&u, uri.String(), devices)
 }
 
-func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
+func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Device) error {
 	log.Printf("Fetching ACL from %v\n", uri)
 
 	response, err := http.Get(uri)
@@ -123,7 +152,7 @@ func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
 
 	untar(f.Name(), &buffer)
 
-	log.Printf("Extracted 'd  ACL from %v\n", uri)
+	log.Printf("Extracted ACL from %v\n", uri)
 
 	m, err := acl.ParseTSV(&buffer, devices)
 	if err != nil {
@@ -132,6 +161,34 @@ func (l *LoadACL) execute(uri string, devices []*uhppote.Device) error {
 
 	for k, l := range m {
 		log.Printf("%v  %v records", k, len(l))
+	}
+
+	current, err := acl.GetACL(u, devices)
+	if err != nil {
+		return err
+	}
+
+	diff, err := acl.Compare(m, current)
+	if err != nil {
+		return err
+	}
+
+	t, err := template.New("report").Parse(report)
+	if err != nil {
+		return err
+	}
+
+	rpt := struct {
+		DateTime types.DateTime
+		Diffs    map[uint32]acl.Diff
+	}{
+		DateTime: types.DateTime(time.Now()),
+		Diffs:    diff,
+	}
+
+	err = t.Execute(os.Stdout, rpt)
+	if err != nil {
+		return err
 	}
 
 	return nil
