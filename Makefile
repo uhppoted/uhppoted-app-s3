@@ -61,9 +61,9 @@ help: build
 version: build
 	$(CMD) version
 
-load-acl: build
-	$(CMD) load-acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
+put-acl: build
+	$(CMD) put-acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
 
-store-acl: build
+get-acl: build
 	$(CMD) help store-acl
-	$(CMD) store-acl
+	$(CMD) get-acl

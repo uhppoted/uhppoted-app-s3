@@ -36,23 +36,23 @@ var report = `ACL DIFF REPORT {{ .DateTime }}
     Deleted:   {{range $value.Deleted}}{{.}}
                {{end}}{{end}}{{end}}`
 
-var LOAD_ACL = LoadACL{
+var PUT_ACL = PutACL{
 	config: DEFAULT_CONFIG,
 	debug:  false,
 }
 
-type LoadACL struct {
+type PutACL struct {
 	config string
 	url    string
 	debug  bool
 }
 
-func (l *LoadACL) Name() string {
-	return "load-acl"
+func (l *PutACL) Name() string {
+	return "put-acl"
 }
 
-func (l *LoadACL) FlagSet() *flag.FlagSet {
-	flagset := flag.NewFlagSet("load-acl", flag.ExitOnError)
+func (l *PutACL) FlagSet() *flag.FlagSet {
+	flagset := flag.NewFlagSet("put-acl", flag.ExitOnError)
 
 	flagset.StringVar(&l.url, "url", l.url, "The S3 URL for the ACL file")
 	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
@@ -60,17 +60,17 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	return flagset
 }
 
-func (l *LoadACL) Description() string {
+func (l *PutACL) Description() string {
 	return fmt.Sprintf("Fetches an access control list from S3 and loads it to the configured controllers")
 }
 
-func (l *LoadACL) Usage() string {
-	return "load-acl [--debug] --url <S3 URL>"
+func (l *PutACL) Usage() string {
+	return "put-acl [--debug] --url <S3 URL>"
 }
 
-func (l *LoadACL) Help() {
+func (l *PutACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s load-acl --url <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s put-acl --url <url>\n", SERVICE)
 	fmt.Println()
 	fmt.Printf("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in:\n\n")
 	fmt.Printf("       %s\n", l.config)
@@ -82,9 +82,9 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 }
 
-func (l *LoadACL) Execute(ctx context.Context) error {
+func (l *PutACL) Execute(ctx context.Context) error {
 	if strings.TrimSpace(l.url) == "" {
-		return fmt.Errorf("load-acl requires a pre-signed S3 URL in the command options")
+		return fmt.Errorf("put-acl requires a pre-signed S3 URL in the command options")
 	}
 
 	uri, err := url.Parse(l.url)
@@ -122,7 +122,7 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 	return l.execute(&u, uri.String(), devices)
 }
 
-func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Device) error {
+func (l *PutACL) execute(u device.IDevice, uri string, devices []*uhppote.Device) error {
 	log.Printf("Fetching ACL from %v\n", uri)
 
 	response, err := http.Get(uri)

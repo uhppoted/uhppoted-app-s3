@@ -6,31 +6,31 @@ import (
 	"fmt"
 )
 
-var STORE_ACL = StoreACL{
+var GET_ACL = GetACL{
 	conf: DEFAULT_CONFIG,
 }
 
-type StoreACL struct {
+type GetACL struct {
 	conf string
 }
 
-func (s *StoreACL) Name() string {
-	return "store-acl"
+func (s *GetACL) Name() string {
+	return "get-acl"
 }
 
-func (s *StoreACL) FlagSet() *flag.FlagSet {
-	return flag.NewFlagSet("store-acl", flag.ExitOnError)
+func (s *GetACL) FlagSet() *flag.FlagSet {
+	return flag.NewFlagSet("get-acl", flag.ExitOnError)
 }
 
-func (s *StoreACL) Description() string {
+func (s *GetACL) Description() string {
 	return fmt.Sprintf("Retrieves the ACL from the configured controllers and uploads to S3")
 }
 
-func (s *StoreACL) Usage() string {
+func (s *GetACL) Usage() string {
 	return "store-acs <S3 URL>"
 }
 
-func (s *StoreACL) Help() {
+func (s *GetACL) Help() {
 	fmt.Println()
 	fmt.Printf("  Usage: %s store-acs <url>\n", SERVICE)
 	fmt.Println()
@@ -44,6 +44,6 @@ func (s *StoreACL) Help() {
 	fmt.Println()
 }
 
-func (s *StoreACL) Execute(ctx context.Context) error {
+func (s *GetACL) Execute(ctx context.Context) error {
 	return fmt.Errorf("** NOT IMPLEMENTED **")
 }
