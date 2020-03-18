@@ -1,5 +1,8 @@
 package commands
 
-const (
-	DEFAULT_CONFIG = filepath.Join(workdir(), "uhppoted.conf")
+import (
+	"path/filepath"
 )
+
+var DEFAULT_CONFIG = filepath.Join(workdir(), "uhppoted.conf")
+var DEFAULT_WORKDIR = workdir()

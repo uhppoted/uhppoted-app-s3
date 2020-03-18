@@ -50,7 +50,7 @@ release-tar: release
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) load-acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
+	$(CMD) load-acl --no-report --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
 
 usage: build
 	$(CMD)
@@ -61,7 +61,7 @@ help: build
 version: build
 	$(CMD) version
 
-put-acl: build
+load-acl: build
 	$(CMD) put-acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
 
 get-acl: build

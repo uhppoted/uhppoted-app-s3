@@ -9,7 +9,7 @@ import (
 )
 
 var cli = []uhppoted.Command{
-	&commands.PUT_ACL,
+	&commands.LOAD_ACL,
 	&commands.GET_ACL,
 	&uhppoted.VERSION,
 }
