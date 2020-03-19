@@ -18,11 +18,11 @@ Supported operating systems:
 
 #### Dependencies
 
-| *Dependency*                          | *Description*                                          |
-| ------------------------------------- | ------------------------------------------------------ |
-| [com.github/uhppoted/uhppote-core][1] | Device level API implementation                        |
-| [com.github/uhppoted/uhppoted-api][2] | common API for external applications                   |
-| golang.org/x/lint/golint              | Additional *lint* check for release builds             |
+| *Dependency*                                                                 | *Description*                              |
+| ---------------------------------------------------------------------------- | ------------------------------------------ |
+| [com.github/uhppoted/uhppote-core][https://github.com/uhppoted/uhppote-core] | Device level API implementation            |
+| [com.github/uhppoted/uhppoted-api][https://github.com/uhppoted/uhppoted-api] | common API for external applications       |
+| golang.org/x/lint/golint                                                     | Additional *lint* check for release builds |
 
 ## uhppoted-acl-s3
 
@@ -35,5 +35,3 @@ Supported commands:
 - load-acl
 - store-acl
 
-[1]: https://github.com/uhppoted/uhppote-core
-[2]: https://github.com/uhppoted/uhppoted-api

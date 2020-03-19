@@ -50,19 +50,20 @@ release-tar: release
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) load-acl --no-report --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
+	$(CMD) load-acl --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/simulation.tar.gz"
 
 usage: build
 	$(CMD)
 
 help: build
 	$(CMD) help
+	$(CMD) help load-acl
 
 version: build
 	$(CMD) version
 
-load-acl: build
-	$(CMD) put-acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
+load-acl-http: build
+	$(CMD) load-acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/simulation.tar.gz?raw=true"
 
 get-acl: build
 	$(CMD) help store-acl

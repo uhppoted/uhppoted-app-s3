@@ -2,11 +2,17 @@ package commands
 
 import (
 	"archive/tar"
+	"bufio"
 	"bytes"
 	"compress/gzip"
 	"context"
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/uhppoted/uhppote-core/device"
 	"github.com/uhppoted/uhppote-core/types"
 	"github.com/uhppoted/uhppote-core/uhppote"
@@ -19,6 +25,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"text/template"
@@ -26,18 +33,22 @@ import (
 )
 
 var LOAD_ACL = LoadACL{
-	config:   DEFAULT_CONFIG,
-	workdir:  DEFAULT_WORKDIR,
-	noreport: false,
-	debug:    false,
+	config:      DEFAULT_CONFIG,
+	workdir:     DEFAULT_WORKDIR,
+	credentials: DEFAULT_CREDENTIALS,
+	region:      DEFAULT_REGION,
+	noreport:    false,
+	debug:       false,
 }
 
 type LoadACL struct {
-	config   string
-	workdir  string
-	url      string
-	noreport bool
-	debug    bool
+	config      string
+	workdir     string
+	credentials string
+	region      string
+	url         string
+	noreport    bool
+	debug       bool
 }
 
 func (l *LoadACL) Name() string {
@@ -48,6 +59,8 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("load-acl", flag.ExitOnError)
 
 	flagset.StringVar(&l.url, "url", l.url, "The S3 URL for the ACL file")
+	flagset.StringVar(&l.credentials, "credentials", l.credentials, "Filepath for the AWS credentials")
+	flagset.StringVar(&l.region, "region", l.region, "The AWS region for S3 (defaults to us-east-1)")
 	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
 	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
 
@@ -71,9 +84,11 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Println("      url       (required) Pre-signed S3 URL for the ACL file")
-	fmt.Println("      no-report (optional) Disables creation of the 'diff' between the current and fetched ACL's")
-	fmt.Println("      debug     (optional) Displays verbose debug information")
+	fmt.Println("      url         (required) Pre-signed S3 URL for the ACL file")
+	fmt.Printf("      credentials (optional) File path for the AWS credentials (defaults to %s)\n", l.credentials)
+	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", l.region)
+	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
+	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
 }
 
@@ -122,28 +137,22 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
 	log.Printf("Fetching ACL from %v", uri)
 
-	response, err := http.Get(uri)
-	if err != nil {
-		return err
+	var f *os.File
+	var err error
+
+	if strings.HasPrefix(uri, "s3://") {
+		f, err = l.fetchS3(uri, log)
+	} else {
+		f, err = l.fetchHTTP(uri, log)
 	}
 
-	defer response.Body.Close()
-
-	f, err := ioutil.TempFile(os.TempDir(), "uhppoted-acl-*")
 	if err != nil {
 		return err
+	} else if f == nil {
+		return fmt.Errorf("'fetch' returned invalid file handle")
 	}
 
 	defer os.Remove(f.Name())
-
-	N, err := io.Copy(f, response.Body)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("Fetched  ACL from %v (%d bytes)", uri, N)
-
-	f.Close()
 
 	var buffer bytes.Buffer
 
@@ -175,6 +184,110 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	}
 
 	return nil
+}
+
+func (l *LoadACL) fetchHTTP(uri string, log *log.Logger) (*os.File, error) {
+	response, err := http.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+
+	defer response.Body.Close()
+
+	f, err := ioutil.TempFile(os.TempDir(), "uhppoted-acl-*")
+	if err != nil {
+		return nil, err
+	}
+
+	N, err := io.Copy(f, response.Body)
+	if err != nil {
+		os.Remove(f.Name())
+		return nil, err
+	}
+
+	log.Printf("Fetched  ACL from %v (%d bytes)", uri, N)
+
+	f.Close()
+
+	return f, nil
+}
+
+func (l *LoadACL) fetchS3(uri string, log *log.Logger) (*os.File, error) {
+	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
+	if len(match) != 3 {
+		return nil, fmt.Errorf("Invalid S3 URI (%s)", uri)
+	}
+
+	bucket := match[1]
+	key := match[2]
+	object := s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	}
+
+	credentials, err := getAWSCredentials(l.credentials)
+	if err != nil {
+		return nil, err
+	}
+
+	cfg := aws.NewConfig().
+		WithCredentials(credentials).
+		WithRegion(l.region)
+
+	s := session.Must(session.NewSession(cfg))
+
+	f, err := ioutil.TempFile(os.TempDir(), "uhppoted-acl-*")
+	if err != nil {
+		return nil, err
+	}
+
+	N, err := s3manager.NewDownloader(s).Download(f, &object)
+	if err != nil {
+		os.Remove(f.Name())
+		return nil, err
+	}
+
+	log.Printf("Fetched  ACL from %v (%d bytes)", uri, N)
+
+	f.Close()
+
+	return f, nil
+}
+
+func getAWSCredentials(file string) (*credentials.Credentials, error) {
+	f, err := os.Open(file)
+	if err != nil {
+		return nil, err
+	}
+
+	defer f.Close()
+
+	awsKeyID := ""
+	awsSecret := ""
+	re := regexp.MustCompile(`\s*(aws_access_key_id|aws_secret_access_key)\s*=\s*(\S+)\s*`)
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		line := scanner.Text()
+		match := re.FindSubmatch([]byte(line))
+		if len(match) == 3 {
+			switch string(match[1]) {
+			case "aws_access_key_id":
+				awsKeyID = string(match[2])
+			case "aws_secret_access_key":
+				awsSecret = string(match[2])
+			}
+		}
+	}
+
+	if awsKeyID == "" {
+		return nil, fmt.Errorf("Invalid AWS credentials - missing 'aws_access_key_id'")
+	}
+
+	if awsSecret == "" {
+		return nil, fmt.Errorf("Invalid AWS credentials - missing 'aws_secret_access_key'")
+	}
+
+	return credentials.NewStaticCredentials(awsKeyID, awsSecret, ""), nil
 }
 
 func untar(filepath string, w io.Writer) error {
@@ -256,6 +369,8 @@ func report(current, list acl.ACL, dir string, log *log.Logger) error {
 	defer f.Close()
 
 	log.Printf("Writing 'diff' report to %v", f.Name())
+
+	t.Execute(os.Stdout, rpt)
 
 	return t.Execute(f, rpt)
 }
