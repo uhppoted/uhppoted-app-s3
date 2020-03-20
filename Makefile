@@ -50,7 +50,8 @@ release-tar: release
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) load-acl --no-report --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/simulation.tar.gz"
+#	$(CMD) load-acl --keys ../runtime/acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true"
+	$(CMD) load-acl --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/QWERTY54.tar.gz"
 
 usage: build
 	$(CMD)

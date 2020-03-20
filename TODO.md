@@ -1,11 +1,13 @@
 # TODO - v0.6.0x
 
 - [x] Get from S3 with AWS credentials
-- [ ] Print/log summary 
-- [ ] Verify signature
+- [x] Print/log summary 
+- [x] Verify signature
 - [ ] Replace temporary file with in-memory buffer
 - [ ] Rotatable log files
 - [ ] Implement 'store-s3'
+- [ ] Implement 'compare-s3'
 - [ ] Documentation
       - credential file
+      - URL's (https://, s3://)
       - S3/IAM recommendations

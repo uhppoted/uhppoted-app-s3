@@ -16,6 +16,7 @@ import (
 	"github.com/uhppoted/uhppote-core/device"
 	"github.com/uhppoted/uhppote-core/types"
 	"github.com/uhppoted/uhppote-core/uhppote"
+	"github.com/uhppoted/uhppoted-acl-s3/auth"
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
 	"io"
@@ -35,19 +36,23 @@ import (
 var LOAD_ACL = LoadACL{
 	config:      DEFAULT_CONFIG,
 	workdir:     DEFAULT_WORKDIR,
+	keysdir:     DEFAULT_KEYSDIR,
 	credentials: DEFAULT_CREDENTIALS,
 	region:      DEFAULT_REGION,
 	noreport:    false,
+	noverify:    false,
 	debug:       false,
 }
 
 type LoadACL struct {
 	config      string
 	workdir     string
+	keysdir     string
 	credentials string
 	region      string
 	url         string
 	noreport    bool
+	noverify    bool
 	debug       bool
 }
 
@@ -61,7 +66,10 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&l.url, "url", l.url, "The S3 URL for the ACL file")
 	flagset.StringVar(&l.credentials, "credentials", l.credentials, "Filepath for the AWS credentials")
 	flagset.StringVar(&l.region, "region", l.region, "The AWS region for S3 (defaults to us-east-1)")
+	flagset.BoolVar(&l.noverify, "no-verify", l.noverify, "Disables verification of the ACL signature")
 	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
+	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
+	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
 
 	return flagset
@@ -154,13 +162,17 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 
 	defer os.Remove(f.Name())
 
-	var buffer bytes.Buffer
+	tsv, signature, uname, err := untar(f.Name())
 
-	untar(f.Name(), &buffer)
+	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
-	log.Printf("Extracted ACL from %v", uri)
+	if !l.noverify {
+		if err := verify(uname, tsv, signature, l.keysdir); err != nil {
+			return err
+		}
+	}
 
-	list, err := acl.ParseTSV(&buffer, devices)
+	list, err := acl.ParseTSV(bytes.NewReader(tsv), devices)
 	if err != nil {
 		return err
 	}
@@ -290,17 +302,21 @@ func getAWSCredentials(file string) (*credentials.Credentials, error) {
 	return credentials.NewStaticCredentials(awsKeyID, awsSecret, ""), nil
 }
 
-func untar(filepath string, w io.Writer) error {
-	f, err := os.Open(filepath)
+func untar(file string) ([]byte, []byte, string, error) {
+	var acl bytes.Buffer
+	var signature bytes.Buffer
+	var uname = ""
+
+	f, err := os.Open(file)
 	if err != nil {
-		return err
+		return nil, nil, "", err
 	}
 
 	defer f.Close()
 
 	gz, err := gzip.NewReader(f)
 	if err != nil {
-		return err
+		return nil, nil, "", err
 	}
 
 	tr := tar.NewReader(gz)
@@ -309,21 +325,32 @@ func untar(filepath string, w io.Writer) error {
 		header, err := tr.Next()
 		if err == io.EOF {
 			break
-		}
-
-		if err != nil {
-			return err
+		} else if err != nil {
+			return nil, nil, "", err
 		}
 
 		switch header.Typeflag {
 		case tar.TypeReg:
-			if _, err := io.Copy(w, tr); err != nil {
-				return err
+			if filepath.Ext(header.Name) == ".acl" {
+				uname = header.Uname
+				if _, err := io.Copy(&acl, tr); err != nil {
+					return nil, nil, "", err
+				}
+			}
+
+			if header.Name == "signature" {
+				if _, err := io.Copy(&signature, tr); err != nil {
+					return nil, nil, "", err
+				}
 			}
 		}
 	}
 
-	return nil
+	return acl.Bytes(), signature.Bytes(), uname, nil
+}
+
+func verify(uname string, acl, signature []byte, dir string) error {
+	return auth.Verify(uname, acl, signature, dir)
 }
 
 var format = `ACL DIFF REPORT {{ .DateTime }}
@@ -336,7 +363,8 @@ var format = `ACL DIFF REPORT {{ .DateTime }}
     Added:     {{range $value.Added}}{{.}}
                {{end}}{{end}}{{if $value.Deleted}}
     Deleted:   {{range $value.Deleted}}{{.}}
-               {{end}}{{end}}{{end}}`
+               {{end}}{{end}}{{end}}
+`
 
 type Report struct {
 	DateTime types.DateTime
