@@ -84,8 +84,8 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Println("      url         (required) Pre-signed S3 URL for the ACL file")
-	fmt.Printf("      credentials (optional) File path for the AWS credentials (defaults to %s)\n", l.credentials)
+	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
+	fmt.Printf("      credentials (optional) File path for the AWS credentials for S3 URL's (defaults to %s)\n", l.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", l.region)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
@@ -178,12 +178,12 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 		report(current, list, l.workdir, log)
 	}
 
-	err = acl.PutACL(u, list)
-	if err != nil {
-		return err
+	rpt, err := acl.PutACL(u, list)
+	for k, v := range rpt {
+		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v", k, v.Unchanged, v.Updated, v.Added, v.Deleted, v.Failed)
 	}
 
-	return nil
+	return err
 }
 
 func (l *LoadACL) fetchHTTP(uri string, log *log.Logger) (*os.File, error) {
