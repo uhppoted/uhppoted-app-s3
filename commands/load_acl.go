@@ -20,7 +20,6 @@ import (
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -145,24 +144,18 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
 	log.Printf("Fetching ACL from %v", uri)
 
-	var f *os.File
-	var err error
-
+	f := l.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
-		f, err = l.fetchS3(uri, log)
-	} else {
-		f, err = l.fetchHTTP(uri, log)
+		f = l.fetchS3
 	}
 
+	b, err := f(uri, log)
 	if err != nil {
 		return err
-	} else if f == nil {
-		return fmt.Errorf("'fetch' returned invalid file handle")
 	}
 
-	defer os.Remove(f.Name())
-
-	tsv, signature, uname, err := untar(f.Name())
+	r := bytes.NewReader(b)
+	tsv, signature, uname, err := untar(r)
 
 	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
@@ -198,7 +191,7 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	return err
 }
 
-func (l *LoadACL) fetchHTTP(uri string, log *log.Logger) (*os.File, error) {
+func (l *LoadACL) fetchHTTP(uri string, log *log.Logger) ([]byte, error) {
 	response, err := http.Get(uri)
 	if err != nil {
 		return nil, err
@@ -206,25 +199,18 @@ func (l *LoadACL) fetchHTTP(uri string, log *log.Logger) (*os.File, error) {
 
 	defer response.Body.Close()
 
-	f, err := ioutil.TempFile(os.TempDir(), "uhppoted-acl-*")
+	var b bytes.Buffer
+	N, err := io.Copy(&b, response.Body)
 	if err != nil {
-		return nil, err
-	}
-
-	N, err := io.Copy(f, response.Body)
-	if err != nil {
-		os.Remove(f.Name())
 		return nil, err
 	}
 
 	log.Printf("Fetched  ACL from %v (%d bytes)", uri, N)
 
-	f.Close()
-
-	return f, nil
+	return b.Bytes(), nil
 }
 
-func (l *LoadACL) fetchS3(uri string, log *log.Logger) (*os.File, error) {
+func (l *LoadACL) fetchS3(uri string, log *log.Logger) ([]byte, error) {
 	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
 	if len(match) != 3 {
 		return nil, fmt.Errorf("Invalid S3 URI (%s)", uri)
@@ -248,22 +234,16 @@ func (l *LoadACL) fetchS3(uri string, log *log.Logger) (*os.File, error) {
 
 	s := session.Must(session.NewSession(cfg))
 
-	f, err := ioutil.TempFile(os.TempDir(), "uhppoted-acl-*")
+	buffer := make([]byte, 1024)
+	b := aws.NewWriteAtBuffer(buffer)
+	N, err := s3manager.NewDownloader(s).Download(b, &object)
 	if err != nil {
-		return nil, err
-	}
-
-	N, err := s3manager.NewDownloader(s).Download(f, &object)
-	if err != nil {
-		os.Remove(f.Name())
 		return nil, err
 	}
 
 	log.Printf("Fetched  ACL from %v (%d bytes)", uri, N)
 
-	f.Close()
-
-	return f, nil
+	return b.Bytes(), nil
 }
 
 func getAWSCredentials(file string) (*credentials.Credentials, error) {
@@ -302,19 +282,12 @@ func getAWSCredentials(file string) (*credentials.Credentials, error) {
 	return credentials.NewStaticCredentials(awsKeyID, awsSecret, ""), nil
 }
 
-func untar(file string) ([]byte, []byte, string, error) {
+func untar(r io.Reader) ([]byte, []byte, string, error) {
 	var acl bytes.Buffer
 	var signature bytes.Buffer
 	var uname = ""
 
-	f, err := os.Open(file)
-	if err != nil {
-		return nil, nil, "", err
-	}
-
-	defer f.Close()
-
-	gz, err := gzip.NewReader(f)
+	gz, err := gzip.NewReader(r)
 	if err != nil {
 		return nil, nil, "", err
 	}

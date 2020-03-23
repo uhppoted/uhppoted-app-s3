@@ -3,7 +3,7 @@
 - [x] Get from S3 with AWS credentials
 - [x] Print/log summary 
 - [x] Verify signature
-- [ ] Replace temporary file with in-memory buffer
+- [x] Replace temporary file with in-memory buffer
 - [ ] Rotatable log files
 - [ ] Implement 'store-s3'
 - [ ] Implement 'compare-s3'
