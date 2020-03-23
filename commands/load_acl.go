@@ -19,6 +19,7 @@ import (
 	"github.com/uhppoted/uhppoted-acl-s3/auth"
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
+	"github.com/uhppoted/uhppoted-api/eventlog"
 	"io"
 	"log"
 	"net/http"
@@ -38,8 +39,11 @@ var LOAD_ACL = LoadACL{
 	keysdir:     DEFAULT_KEYSDIR,
 	credentials: DEFAULT_CREDENTIALS,
 	region:      DEFAULT_REGION,
+	logFile:     DEFAULT_LOGFILE,
+	logFileSize: DEFAULT_LOGFILESIZE,
 	noreport:    false,
 	noverify:    false,
+	nolog:       false,
 	debug:       false,
 }
 
@@ -50,8 +54,11 @@ type LoadACL struct {
 	credentials string
 	region      string
 	url         string
+	logFile     string
+	logFileSize int
 	noreport    bool
 	noverify    bool
+	nolog       bool
 	debug       bool
 }
 
@@ -67,6 +74,7 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&l.region, "region", l.region, "The AWS region for S3 (defaults to us-east-1)")
 	flagset.BoolVar(&l.noverify, "no-verify", l.noverify, "Disables verification of the ACL signature")
 	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
+	flagset.BoolVar(&l.nolog, "no-log", l.nolog, "Writes log messages to stdout rather than a rotatable log file")
 	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
 	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
@@ -136,7 +144,13 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 		devices = append(devices, uhppote.NewDevice(id, d.Address, d.Rollover, d.Doors))
 	}
 
-	logger := log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
+	var logger *log.Logger
+	if !l.nolog {
+		events := eventlog.Ticker{Filename: l.logFile, MaxSize: l.logFileSize}
+		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
+	} else {
+		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
+	}
 
 	return l.execute(&u, uri.String(), devices, logger)
 }
@@ -175,11 +189,11 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	}
 
 	if !l.noreport {
-		current, err := acl.GetACL(u, devices)
-		if err != nil {
-			return err
-		}
-
+				current, err := acl.GetACL(u, devices)
+				if err != nil {
+				return err
+			}
+		
 		report(current, list, l.workdir, log)
 	}
 
