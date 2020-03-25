@@ -4,8 +4,8 @@ go 1.14
 
 require (
 	github.com/aws/aws-sdk-go v1.29.27
-	github.com/uhppoted/uhppote-core v0.5.2-0.20200317195304-e87a1741fa95
-	github.com/uhppoted/uhppoted-api v0.5.2-0.20200318192830-d343ef7b7170
+	github.com/uhppoted/uhppote-core v0.5.2-0.20200325185445-fd835261278f
+	github.com/uhppoted/uhppoted-api v0.5.2-0.20200325185547-a1183e9869a8
 	golang.org/x/sys v0.0.0-20200223170610-d5e6a3e2c0ae
 )
 

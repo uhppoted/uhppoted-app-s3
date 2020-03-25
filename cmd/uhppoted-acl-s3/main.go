@@ -10,7 +10,7 @@ import (
 
 var cli = []uhppoted.Command{
 	&commands.LOAD_ACL,
-	&commands.GET_ACL,
+	&commands.STORE_ACL,
 	&uhppoted.VERSION,
 }
 

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"crypto"
+	"crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
@@ -10,6 +11,20 @@ import (
 	"io/ioutil"
 	"path/filepath"
 )
+
+func Sign(acl []byte, keyfile string) ([]byte, error) {
+	key, err := loadPrivateKey(keyfile)
+	if err != nil {
+		return nil, err
+	} else if key == nil {
+		return nil, fmt.Errorf("Invalid RSA signing key")
+	}
+
+	rng := rand.Reader
+	hashed := sha256.Sum256(acl)
+
+	return rsa.SignPKCS1v15(rng, key, crypto.SHA256, hashed[:])
+}
 
 func Verify(signedBy string, acl []byte, signature []byte, dir string) error {
 	pubkey, err := loadPublicKey(dir, signedBy)
@@ -26,6 +41,30 @@ func Verify(signedBy string, acl []byte, signature []byte, dir string) error {
 	}
 
 	return nil
+}
+
+func loadPrivateKey(filepath string) (*rsa.PrivateKey, error) {
+	bytes, err := ioutil.ReadFile(filepath)
+	if err != nil {
+		return nil, err
+	}
+
+	block, _ := pem.Decode(bytes)
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, fmt.Errorf("%s is not a valid RSA private key", filepath)
+	}
+
+	key, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("%s is not a valid RSA private key", filepath)
+	}
+
+	pk, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("%s is not a valid RSA private key", filepath)
+	}
+
+	return pk, nil
 }
 
 func loadPublicKey(dir, id string) (*rsa.PublicKey, error) {

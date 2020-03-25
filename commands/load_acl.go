@@ -48,12 +48,12 @@ var LOAD_ACL = LoadACL{
 }
 
 type LoadACL struct {
+	url         string
 	config      string
 	workdir     string
 	keysdir     string
 	credentials string
 	region      string
-	url         string
 	logFile     string
 	logFileSize int
 	noreport    bool
@@ -72,11 +72,12 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&l.url, "url", l.url, "The S3 URL for the ACL file")
 	flagset.StringVar(&l.credentials, "credentials", l.credentials, "Filepath for the AWS credentials")
 	flagset.StringVar(&l.region, "region", l.region, "The AWS region for S3 (defaults to us-east-1)")
+	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
+	flagset.StringVar(&l.config, "config", l.config, "'conf' file to use for controller identification and configuration")
+	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
 	flagset.BoolVar(&l.noverify, "no-verify", l.noverify, "Disables verification of the ACL signature")
 	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
 	flagset.BoolVar(&l.nolog, "no-log", l.nolog, "Writes log messages to stdout rather than a rotatable log file")
-	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
-	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
 
 	return flagset
@@ -92,7 +93,7 @@ func (l *LoadACL) Usage() string {
 
 func (l *LoadACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s load-acl --url <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s load-acl [options] --url <url>\n", SERVICE)
 	fmt.Println()
 	fmt.Printf("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in:\n\n")
 	fmt.Printf("       %s\n", l.config)
@@ -102,7 +103,12 @@ func (l *LoadACL) Help() {
 	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
 	fmt.Printf("      credentials (optional) File path for the AWS credentials for S3 URL's (defaults to %s)\n", l.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", l.region)
+	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", l.keysdir)
+	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", l.config)
+	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
+	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
+	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
 }
@@ -114,7 +120,7 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 
 	uri, err := url.Parse(l.url)
 	if err != nil {
-		return fmt.Errorf("Invalid pre-signed S3 URL '%s' (%w)", l.url, err)
+		return fmt.Errorf("Invalid download URL '%s' (%w)", l.url, err)
 	}
 
 	conf := config.NewConfig()
@@ -189,11 +195,11 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	}
 
 	if !l.noreport {
-				current, err := acl.GetACL(u, devices)
-				if err != nil {
-				return err
-			}
-		
+		current, err := acl.GetACL(u, devices)
+		if err != nil {
+			return err
+		}
+
 		report(current, list, l.workdir, log)
 	}
 
