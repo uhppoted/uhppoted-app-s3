@@ -7,6 +7,7 @@
 - [x] Rotatable log files
 - [ ] Implement 'store-s3'
 - [ ] Implement 'compare-s3'
+- [ ] --zip option
 - [ ] Documentation
       - credential file
       - URL's (https://, s3://)

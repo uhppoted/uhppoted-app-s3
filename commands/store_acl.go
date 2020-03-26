@@ -1,6 +1,9 @@
 package commands
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"flag"
 	"fmt"
@@ -10,11 +13,13 @@ import (
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
 	"github.com/uhppoted/uhppoted-api/eventlog"
+	"io"
 	"log"
 	"net/url"
 	"os"
 	"sort"
 	"strings"
+	"time"
 )
 
 var STORE_ACL = StoreACL{
@@ -150,35 +155,77 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 		return err
 	}
 
-	fmt.Printf(">>> DEBUG: %v\n", signature)
+	var b bytes.Buffer
+	if err := targz(tsv, signature, &b); err != nil {
+		return err
+	}
 
-	//	r := bytes.NewReader(b)
-	//	tsv, signature, uname, err := untar(r)
-	//
-	//	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
-	//
+	log.Printf("tar'd ACL (%v bytes) and signature (%v bytes): %v bytes", len(tsv), len(signature), b.Len())
 
-	//	f := s.storeHTTP
-	//	if strings.HasPrefix(uri, "s3://") {
-	//			f = s.storeS3
-	//		}
-	//
-	//		err := f(uri, tsv, log)
-	//		if err != nil {
-	//			return err
-	//		}
+	f := s.storeHTTP
+	if strings.HasPrefix(uri, "s3://") {
+		f = s.storeS3
+	}
 
-	return fmt.Errorf("NOT IMPLEMENTED")
+	return f(uri, b.Bytes(), log)
 }
 
 func sign(acl []byte, keyfile string) ([]byte, error) {
 	return auth.Sign(acl, keyfile)
 }
 
-// func (s *StoreACL) storeHTTP(uri string, r io.Reader, log *log.Logger) error {
-// 	return fmt.Errorf("STORE/HTTP: NOT IMPLEMENTED")
-// }
-//
-// func (s *StoreACL) storeS3(uri string, r io.Reader, log *log.Logger) error {
-// 	return fmt.Errorf("STORE/S3: NOT IMPLEMENTED")
-// }
+func targz(acl, signature []byte, w io.Writer) error {
+	var files = []struct {
+		Name string
+		Body []byte
+	}{
+		{"uhppoted.acl", acl},
+		{"signature", signature},
+	}
+
+	var b bytes.Buffer
+
+	tw := tar.NewWriter(&b)
+	for _, file := range files {
+		header := &tar.Header{
+			Name:  file.Name,
+			Mode:  0600,
+			Size:  int64(len(file.Body)),
+			Uname: "uhppoted",
+			Gname: "uhppoted",
+		}
+
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if _, err := tw.Write([]byte(file.Body)); err != nil {
+			return err
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		return err
+	}
+
+	gz := gzip.NewWriter(w)
+
+	gz.Name = fmt.Sprintf("uhppoted-%s.tar.gz", time.Now().Format("2006-01-02 15:04:05"))
+	gz.ModTime = time.Now()
+	gz.Comment = ""
+
+	_, err := gz.Write(b.Bytes())
+	if err != nil {
+		return err
+	}
+
+	return gz.Close()
+}
+
+func (s *StoreACL) storeHTTP(uri string, b []byte, log *log.Logger) error {
+	return fmt.Errorf("STORE/HTTP: NOT IMPLEMENTED")
+}
+
+func (s *StoreACL) storeS3(uri string, b []byte, log *log.Logger) error {
+	return fmt.Errorf("STORE/S3: NOT IMPLEMENTED")
+}
