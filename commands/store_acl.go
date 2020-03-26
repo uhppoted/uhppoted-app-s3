@@ -15,6 +15,7 @@ import (
 	"github.com/uhppoted/uhppoted-api/eventlog"
 	"io"
 	"log"
+	"net/http"
 	"net/url"
 	"os"
 	"sort"
@@ -167,7 +168,7 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 		f = s.storeS3
 	}
 
-	return f(uri, b.Bytes(), log)
+	return f(uri, bytes.NewReader(b.Bytes()), log)
 }
 
 func sign(acl []byte, keyfile string) ([]byte, error) {
@@ -222,10 +223,26 @@ func targz(acl, signature []byte, w io.Writer) error {
 	return gz.Close()
 }
 
-func (s *StoreACL) storeHTTP(uri string, b []byte, log *log.Logger) error {
-	return fmt.Errorf("STORE/HTTP: NOT IMPLEMENTED")
+func (s *StoreACL) storeHTTP(uri string, r io.Reader, log *log.Logger) error {
+	rq, err := http.NewRequest("PUT", "http://localhost:8080/upload", r)
+	if err != nil {
+		return err
+	}
+
+	rq.Header.Set("Content-Type", "binary/octet-stream")
+
+	response, err := http.DefaultClient.Do(rq)
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	log.Printf("Uploaded to %v", uri)
+
+	return nil
 }
 
-func (s *StoreACL) storeS3(uri string, b []byte, log *log.Logger) error {
+func (s *StoreACL) storeS3(uri string, r io.Reader, log *log.Logger) error {
 	return fmt.Errorf("STORE/S3: NOT IMPLEMENTED")
 }
