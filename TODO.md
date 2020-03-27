@@ -5,7 +5,7 @@
 - [x] Verify signature
 - [x] Replace temporary file with in-memory buffer
 - [x] Rotatable log files
-- [ ] Implement 'store-s3'
+- [x] Implement 'store-s3'
 - [ ] Implement 'compare-s3'
 - [ ] --zip option
 - [ ] Documentation

@@ -50,7 +50,8 @@ release-tar: release
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --url "http://localhost:8080/upload/uhppoted.tar.gz"
+#	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --url "http://localhost:8080/upload/uhppoted.tar.gz"
+	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/uhppoted.tar.gz"
 
 usage: build
 	$(CMD)
@@ -69,6 +70,8 @@ load-acl-http: build
 load-acl-s3: build
 	$(CMD) load-acl --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/QWERTY54.tar.gz"
 
-store-acl: build
+store-acl-http: build
 	$(CMD) store-acl --key ../runtime/acl/uhppoted --url "http://localhost:8080/upload/uhppoted.tar.gz"
 
+store-acl-s3: build
+	$(CMD) store-acl --key ../runtime/acl/uhppoted --url "http://localhost:8080/upload/uhppoted.tar.gz"

@@ -7,6 +7,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/uhppoted/uhppote-core/device"
 	"github.com/uhppoted/uhppote-core/uhppote"
 	"github.com/uhppoted/uhppoted-acl-s3/auth"
@@ -18,6 +21,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -26,6 +30,8 @@ import (
 var STORE_ACL = StoreACL{
 	config:      DEFAULT_CONFIG,
 	keyfile:     DEFAULT_KEYFILE,
+	credentials: DEFAULT_CREDENTIALS,
+	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
 	nolog:       false,
@@ -36,6 +42,8 @@ type StoreACL struct {
 	url         string
 	config      string
 	keyfile     string
+	credentials string
+	region      string
 	logFile     string
 	logFileSize int
 	nolog       bool
@@ -50,8 +58,10 @@ func (s *StoreACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("store-acl", flag.ExitOnError)
 
 	flagset.StringVar(&s.url, "url", s.url, "URL for a 'PUT' request to upload the retrieved ACL file")
-	flagset.StringVar(&s.config, "config", s.config, "'conf' file to use for controller identification and configuration")
+	flagset.StringVar(&s.credentials, "credentials", s.credentials, "Filepath for the AWS credentials")
+	flagset.StringVar(&s.region, "region", s.region, "The AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&s.keyfile, "key", s.keyfile, "RSA signing key")
+	flagset.StringVar(&s.config, "config", s.config, "'conf' file to use for controller identification and configuration")
 	flagset.BoolVar(&s.nolog, "no-log", s.nolog, "Writes log messages to stdout rather than a rotatable log file")
 	flagset.BoolVar(&s.debug, "debug", s.debug, "Enables debugging information")
 
@@ -77,8 +87,10 @@ func (s *StoreACL) Help() {
 	fmt.Println("    Options:")
 	fmt.Println()
 	fmt.Println("      url     (required) URL for the uploaded ACL file")
-	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", s.config)
+	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", s.credentials)
+	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", s.region)
 	fmt.Printf("      key        (optional) RSA signing keys (defaults to %s)", s.keyfile)
+	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", s.config)
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
@@ -244,5 +256,37 @@ func (s *StoreACL) storeHTTP(uri string, r io.Reader, log *log.Logger) error {
 }
 
 func (s *StoreACL) storeS3(uri string, r io.Reader, log *log.Logger) error {
-	return fmt.Errorf("STORE/S3: NOT IMPLEMENTED")
+	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
+	if len(match) != 3 {
+		return fmt.Errorf("Invalid S3 URI (%s)", uri)
+	}
+
+	bucket := match[1]
+	key := match[2]
+
+	object := s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   r,
+	}
+
+	credentials, err := getAWSCredentials(s.credentials)
+	if err != nil {
+		return err
+	}
+
+	cfg := aws.NewConfig().
+		WithCredentials(credentials).
+		WithRegion(s.region)
+
+	ss := session.Must(session.NewSession(cfg))
+
+	_, err := s3manager.NewUploader(ss).Upload(&object)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Stored ACL to %v", uri)
+
+	return nil
 }

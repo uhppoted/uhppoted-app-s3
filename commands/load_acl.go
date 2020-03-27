@@ -101,7 +101,7 @@ func (l *LoadACL) Help() {
 	fmt.Println("    Options:")
 	fmt.Println()
 	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
-	fmt.Printf("      credentials (optional) File path for the AWS credentials for S3 URL's (defaults to %s)\n", l.credentials)
+	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", l.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", l.region)
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", l.keysdir)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", l.config)
@@ -252,16 +252,16 @@ func (l *LoadACL) fetchS3(uri string, log *log.Logger) ([]byte, error) {
 		WithCredentials(credentials).
 		WithRegion(l.region)
 
-	s := session.Must(session.NewSession(cfg))
+	ss := session.Must(session.NewSession(cfg))
 
 	buffer := make([]byte, 1024)
 	b := aws.NewWriteAtBuffer(buffer)
-	N, err := s3manager.NewDownloader(s).Download(b, &object)
+	N, err := s3manager.NewDownloader(ss).Download(b, &object)
 	if err != nil {
 		return nil, err
 	}
 
-	log.Printf("Fetched  ACL from %v (%d bytes)", uri, N)
+	log.Printf("Fetched ACL from %v (%d bytes)", uri, N)
 
 	return b.Bytes(), nil
 }
