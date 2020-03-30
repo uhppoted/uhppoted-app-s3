@@ -22,7 +22,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 )
@@ -58,7 +57,7 @@ func (s *StoreACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("store-acl", flag.ExitOnError)
 
 	flagset.StringVar(&s.url, "url", s.url, "URL for a 'PUT' request to upload the retrieved ACL file")
-	flagset.StringVar(&s.credentials, "credentials", s.credentials, "Filepath for the AWS credentials")
+	flagset.StringVar(&s.credentials, "credentials", s.credentials, "File path for the AWS credentials")
 	flagset.StringVar(&s.region, "region", s.region, "The AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&s.keyfile, "key", s.keyfile, "RSA signing key")
 	flagset.StringVar(&s.config, "config", s.config, "'conf' file to use for controller identification and configuration")
@@ -73,12 +72,12 @@ func (s *StoreACL) Description() string {
 }
 
 func (s *StoreACL) Usage() string {
-	return "store-acs <S3 URL>"
+	return "store-acl <S3 URL>"
 }
 
 func (s *StoreACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s store-acs <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s store-acl <url>\n", SERVICE)
 	fmt.Println()
 	fmt.Printf("    Retrieves the ACL from the controllers configured in:\n\n")
 	fmt.Printf("       %s\n\n", s.config)
@@ -111,27 +110,7 @@ func (s *StoreACL) Execute(ctx context.Context) error {
 		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
 	}
 
-	keys := []uint32{}
-	for id, _ := range conf.Devices {
-		keys = append(keys, id)
-	}
-
-	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
-
-	u := uhppote.UHPPOTE{
-		BindAddress:      conf.BindAddress,
-		BroadcastAddress: conf.BroadcastAddress,
-		ListenAddress:    conf.ListenAddress,
-		Devices:          make(map[uint32]*uhppote.Device),
-		Debug:            s.debug,
-	}
-
-	devices := []*uhppote.Device{}
-	for _, id := range keys {
-		d := conf.Devices[id]
-		u.Devices[id] = uhppote.NewDevice(id, d.Address, d.Rollover, d.Doors)
-		devices = append(devices, uhppote.NewDevice(id, d.Address, d.Rollover, d.Doors))
-	}
+	u, devices := getDevices(conf, s.debug)
 
 	var logger *log.Logger
 	if !s.nolog {
@@ -281,7 +260,7 @@ func (s *StoreACL) storeS3(uri string, r io.Reader, log *log.Logger) error {
 
 	ss := session.Must(session.NewSession(cfg))
 
-	_, err := s3manager.NewUploader(ss).Upload(&object)
+	_, err = s3manager.NewUploader(ss).Upload(&object)
 	if err != nil {
 		return err
 	}

@@ -11,6 +11,7 @@ import (
 var cli = []uhppoted.Command{
 	&commands.LOAD_ACL,
 	&commands.STORE_ACL,
+	&commands.COMPARE_ACL,
 	&uhppoted.VERSION,
 }
 
