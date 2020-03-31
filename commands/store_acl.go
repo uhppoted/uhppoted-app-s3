@@ -1,29 +1,20 @@
 package commands
 
 import (
-	"archive/tar"
 	"bytes"
-	"compress/gzip"
 	"context"
 	"flag"
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/uhppoted/uhppote-core/device"
 	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-acl-s3/auth"
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
 	"github.com/uhppoted/uhppoted-api/eventlog"
 	"io"
 	"log"
-	"net/http"
 	"net/url"
 	"os"
-	"regexp"
 	"strings"
-	"time"
 )
 
 var STORE_ACL = StoreACL{
@@ -88,7 +79,7 @@ func (s *StoreACL) Help() {
 	fmt.Println("      url     (required) URL for the uploaded ACL file")
 	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", s.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", s.region)
-	fmt.Printf("      key        (optional) RSA signing keys (defaults to %s)", s.keyfile)
+	fmt.Printf("      key        (optional) RSA key used to sign the retrieved ACL (defaults to %s)", s.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", s.config)
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
@@ -148,7 +139,12 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 	}
 
 	var b bytes.Buffer
-	if err := targz(tsv, signature, &b); err != nil {
+	var files = []File{
+		{"uhppoted.acl", tsv},
+		{"signature", signature},
+	}
+
+	if err := targz(files, &b); err != nil {
 		return err
 	}
 
@@ -159,113 +155,19 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 		f = s.storeS3
 	}
 
-	return f(uri, bytes.NewReader(b.Bytes()), log)
-}
-
-func sign(acl []byte, keyfile string) ([]byte, error) {
-	return auth.Sign(acl, keyfile)
-}
-
-func targz(acl, signature []byte, w io.Writer) error {
-	var files = []struct {
-		Name string
-		Body []byte
-	}{
-		{"uhppoted.acl", acl},
-		{"signature", signature},
-	}
-
-	var b bytes.Buffer
-
-	tw := tar.NewWriter(&b)
-	for _, file := range files {
-		header := &tar.Header{
-			Name:  file.Name,
-			Mode:  0600,
-			Size:  int64(len(file.Body)),
-			Uname: "uhppoted",
-			Gname: "uhppoted",
-		}
-
-		if err := tw.WriteHeader(header); err != nil {
-			return err
-		}
-
-		if _, err := tw.Write([]byte(file.Body)); err != nil {
-			return err
-		}
-	}
-
-	if err := tw.Close(); err != nil {
-		return err
-	}
-
-	gz := gzip.NewWriter(w)
-
-	gz.Name = fmt.Sprintf("uhppoted-%s.tar.gz", time.Now().Format("2006-01-02 15:04:05"))
-	gz.ModTime = time.Now()
-	gz.Comment = ""
-
-	_, err := gz.Write(b.Bytes())
-	if err != nil {
-		return err
-	}
-
-	return gz.Close()
-}
-
-func (s *StoreACL) storeHTTP(uri string, r io.Reader, log *log.Logger) error {
-	rq, err := http.NewRequest("PUT", "http://localhost:8080/upload", r)
-	if err != nil {
-		return err
-	}
-
-	rq.Header.Set("Content-Type", "binary/octet-stream")
-
-	response, err := http.DefaultClient.Do(rq)
-	if err != nil {
-		return err
-	}
-
-	defer response.Body.Close()
-
-	log.Printf("Uploaded to %v", uri)
-
-	return nil
-}
-
-func (s *StoreACL) storeS3(uri string, r io.Reader, log *log.Logger) error {
-	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
-	if len(match) != 3 {
-		return fmt.Errorf("Invalid S3 URI (%s)", uri)
-	}
-
-	bucket := match[1]
-	key := match[2]
-
-	object := s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-		Body:   r,
-	}
-
-	credentials, err := getAWSCredentials(s.credentials)
-	if err != nil {
-		return err
-	}
-
-	cfg := aws.NewConfig().
-		WithCredentials(credentials).
-		WithRegion(s.region)
-
-	ss := session.Must(session.NewSession(cfg))
-
-	_, err = s3manager.NewUploader(ss).Upload(&object)
-	if err != nil {
+	if err := f(uri, bytes.NewReader(b.Bytes())); err != nil {
 		return err
 	}
 
 	log.Printf("Stored ACL to %v", uri)
 
 	return nil
+}
+
+func (s *StoreACL) storeHTTP(url string, r io.Reader) error {
+	return storeHTTP(url, r)
+}
+
+func (s *StoreACL) storeS3(uri string, r io.Reader) error {
+	return storeS3(uri, s.credentials, s.region, r)
 }

@@ -13,7 +13,9 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 var LOAD_ACL = LoadACL{
@@ -28,6 +30,18 @@ var LOAD_ACL = LoadACL{
 	noverify:    false,
 	nolog:       false,
 	debug:       false,
+	template: `ACL DIFF REPORT {{ .DateTime }}
+{{range $id,$value := .Diffs}}
+  DEVICE {{ $id }}{{if $value.Unchanged}}
+    Unchanged: {{range $value.Unchanged}}{{.}}
+               {{end}}{{end}}{{if $value.Updated}}
+    Updated:   {{range $value.Updated}}{{.}}
+               {{end}}{{end}}{{if $value.Added}}
+    Added:     {{range $value.Added}}{{.}}
+               {{end}}{{end}}{{if $value.Deleted}}
+    Deleted:   {{range $value.Deleted}}{{.}}
+               {{end}}{{end}}{{end}}
+`,
 }
 
 type LoadACL struct {
@@ -39,6 +53,7 @@ type LoadACL struct {
 	region      string
 	logFile     string
 	logFileSize int
+	template    string
 	noreport    bool
 	noverify    bool
 	nolog       bool
@@ -52,7 +67,7 @@ func (l *LoadACL) Name() string {
 func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("load-acl", flag.ExitOnError)
 
-	flagset.StringVar(&l.url, "url", l.url, "The S3 URL for the ACL file")
+	flagset.StringVar(&l.url, "url", l.url, "The URL from which to fetch the ACL file")
 	flagset.StringVar(&l.credentials, "credentials", l.credentials, "Filepath for the AWS credentials")
 	flagset.StringVar(&l.region, "region", l.region, "The AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
@@ -163,7 +178,7 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 			return err
 		}
 
-		report(current, list, l.workdir, log)
+		l.report(current, list, log)
 	}
 
 	rpt, err := acl.PutACL(u, list)
@@ -194,4 +209,23 @@ func (l *LoadACL) fetchS3(url string, log *log.Logger) ([]byte, error) {
 	log.Printf("Fetched ACL from %v (%d bytes)", url, len(acl))
 
 	return acl, nil
+}
+
+func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
+	log.Printf("Generating ACL 'diff' report")
+
+	report(current, list, l.template, os.Stdout)
+
+	filename := time.Now().Format("acl-2006-01-02T150405.rpt")
+	file := filepath.Join(l.workdir, filename)
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+
+	defer f.Close()
+
+	log.Printf("Writing 'diff' report to %v", f.Name())
+
+	return report(current, list, l.template, f)
 }

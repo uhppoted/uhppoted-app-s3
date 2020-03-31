@@ -27,22 +27,14 @@ import (
 	"time"
 )
 
-var format = `ACL DIFF REPORT {{ .DateTime }}
-{{range $id,$value := .Diffs}}
-  DEVICE {{ $id }}{{if $value.Unchanged}}
-    Unchanged: {{range $value.Unchanged}}{{.}}
-               {{end}}{{end}}{{if $value.Updated}}
-    Updated:   {{range $value.Updated}}{{.}}
-               {{end}}{{end}}{{if $value.Added}}
-    Added:     {{range $value.Added}}{{.}}
-               {{end}}{{end}}{{if $value.Deleted}}
-    Deleted:   {{range $value.Deleted}}{{.}}
-               {{end}}{{end}}{{end}}
-`
-
 type Report struct {
 	DateTime types.DateTime
 	Diffs    map[uint32]acl.Diff
+}
+
+type File struct {
+	Name string
+	Body []byte
 }
 
 func getDevices(conf *config.Config, debug bool) (uhppote.UHPPOTE, []*uhppote.Device) {
@@ -87,6 +79,24 @@ func fetchHTTP(url string, log *log.Logger) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func storeHTTP(uri string, r io.Reader) error {
+	rq, err := http.NewRequest("PUT", "http://localhost:8080/upload", r)
+	if err != nil {
+		return err
+	}
+
+	rq.Header.Set("Content-Type", "binary/octet-stream")
+
+	response, err := http.DefaultClient.Do(rq)
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	return nil
+}
+
 func fetchS3(uri, awsconfig, region string, log *log.Logger) ([]byte, error) {
 	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
 	if len(match) != 3 {
@@ -123,6 +133,40 @@ func fetchS3(uri, awsconfig, region string, log *log.Logger) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
+func storeS3(uri, awsconfig, region string, r io.Reader) error {
+	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
+	if len(match) != 3 {
+		return fmt.Errorf("Invalid S3 URI (%s)", uri)
+	}
+
+	bucket := match[1]
+	key := match[2]
+
+	object := s3manager.UploadInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+		Body:   r,
+	}
+
+	credentials, err := getAWSCredentials(awsconfig)
+	if err != nil {
+		return err
+	}
+
+	cfg := aws.NewConfig().
+		WithCredentials(credentials).
+		WithRegion(region)
+
+	ss := session.Must(session.NewSession(cfg))
+
+	_, err = s3manager.NewUploader(ss).Upload(&object)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func getAWSCredentials(file string) (*credentials.Credentials, error) {
 	f, err := os.Open(file)
 	if err != nil {
@@ -157,6 +201,46 @@ func getAWSCredentials(file string) (*credentials.Credentials, error) {
 	}
 
 	return credentials.NewStaticCredentials(awsKeyID, awsSecret, ""), nil
+}
+
+func targz(files []File, w io.Writer) error {
+	var b bytes.Buffer
+
+	tw := tar.NewWriter(&b)
+	for _, file := range files {
+		header := &tar.Header{
+			Name:  file.Name,
+			Mode:  0600,
+			Size:  int64(len(file.Body)),
+			Uname: "uhppoted",
+			Gname: "uhppoted",
+		}
+
+		if err := tw.WriteHeader(header); err != nil {
+			return err
+		}
+
+		if _, err := tw.Write([]byte(file.Body)); err != nil {
+			return err
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		return err
+	}
+
+	gz := gzip.NewWriter(w)
+
+	gz.Name = fmt.Sprintf("uhppoted-%s.tar.gz", time.Now().Format("2006-01-02T150405"))
+	gz.ModTime = time.Now()
+	gz.Comment = ""
+
+	_, err := gz.Write(b.Bytes())
+	if err != nil {
+		return err
+	}
+
+	return gz.Close()
 }
 
 func untar(r io.Reader) ([]byte, []byte, string, error) {
@@ -199,12 +283,15 @@ func untar(r io.Reader) ([]byte, []byte, string, error) {
 	return acl.Bytes(), signature.Bytes(), uname, nil
 }
 
+func sign(acl []byte, keyfile string) ([]byte, error) {
+	return auth.Sign(acl, keyfile)
+}
+
 func verify(uname string, acl, signature []byte, dir string) error {
 	return auth.Verify(uname, acl, signature, dir)
 }
 
-func report(current, list acl.ACL, dir string, log *log.Logger) error {
-	log.Printf("Generating ACL 'diff' report")
+func report(current, list acl.ACL, format string, w io.Writer) error {
 	diff, err := acl.Compare(current, list)
 	if err != nil {
 		return err
@@ -220,17 +307,5 @@ func report(current, list acl.ACL, dir string, log *log.Logger) error {
 		Diffs:    diff,
 	}
 
-	filename := time.Now().Format("acl-2006-01-02T15:04:05.rpt")
-	file := filepath.Join(dir, filename)
-	f, err := os.Create(file)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-
-	log.Printf("Writing 'diff' report to %v", f.Name())
-
-	t.Execute(os.Stdout, rpt)
-
-	return t.Execute(f, rpt)
+	return t.Execute(w, rpt)
 }

@@ -50,7 +50,12 @@ release-tar: release
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) compare-acl --no-log --keys ../runtime/acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true"
+	$(CMD) compare-acl --no-report --no-log \
+	       --credentials "../runtime/.credentials.test" \
+	       --keys        ../runtime/acl \
+	       --key         ../runtime/acl/uhppoted \
+	       --acl         "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \
+	       --report      "s3://uhppoted-test/simulation/report.tar.gz"
 
 usage: build
 	$(CMD)
@@ -74,3 +79,19 @@ store-acl-http: build
 
 store-acl-s3: build
 	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/uhppoted.tar.gz"
+
+compare-acl-http: build
+	$(CMD) compare-acl --no-report --no-log \
+	       --keys   ../runtime/acl \
+	       --key    ../runtime/acl/uhppoted \
+	       --acl    "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true" \
+	       --report "http://localhost:8080/upload/report.tar.gz"
+
+compare-acl-s3: build
+	$(CMD) compare-acl --no-report --no-log \
+	       --credentials "../runtime/.credentials.test" \
+	       --keys        ../runtime/acl \
+	       --key         ../runtime/acl/uhppoted \
+	       --acl         "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \
+	       --report      "s3://uhppoted-test/simulation/report.tar.gz"
+
