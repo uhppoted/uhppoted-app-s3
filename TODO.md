@@ -7,7 +7,7 @@
 - [x] Rotatable log files
 - [x] Implement 'store-s3'
 - [x] Implement 'compare-s3'
-- [ ] --zip option
+- [x] --zip option
 - [x] file:/// URL's
 - [ ] Throw error if tar/zip file has more than one ACL or signature
 - [ ] Documentation
