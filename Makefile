@@ -54,7 +54,7 @@ debug: build
 	       --credentials "../runtime/.credentials.test" \
 	       --keys        ../runtime/acl \
 	       --key         ../runtime/acl/uhppoted \
-	       --acl         "file://../runtime/simulation/QWERTY54.tar.gz" \
+	       --acl         "file://../runtime/simulation/QWERTY54.zip" \
 	       --report      "file://../runtime/acl/report.tar.gz"
 
 usage: build
@@ -76,6 +76,9 @@ load-acl-s3: build
 
 load-acl-file: build
 	$(CMD) load-acl --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/QWERTY54.tar.gz"
+
+load-acl-zip: build
+	$(CMD) load-acl --no-log --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/QWERTY54.zip"
 
 store-acl-http: build
 	$(CMD) store-acl --key ../runtime/acl/uhppoted --url "http://localhost:8080/upload/uhppoted.tar.gz"

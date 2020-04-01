@@ -2,6 +2,7 @@ package commands
 
 import (
 	"archive/tar"
+	"archive/zip"
 	"bufio"
 	"bytes"
 	"compress/gzip"
@@ -292,6 +293,53 @@ func untar(r io.Reader) ([]byte, []byte, string, error) {
 					return nil, nil, "", err
 				}
 			}
+		}
+	}
+
+	return acl.Bytes(), signature.Bytes(), uname, nil
+}
+
+func unzip(r io.Reader) ([]byte, []byte, string, error) {
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	zr, err := zip.NewReader(bytes.NewReader(b), int64(len(b)))
+	if err != nil {
+		return nil, nil, "", err
+	}
+
+	var acl bytes.Buffer
+	var signature bytes.Buffer
+	var uname = ""
+
+	for _, f := range zr.File {
+		if filepath.Ext(f.Name) == ".acl" {
+			rc, err := f.Open()
+			if err != nil {
+				return nil, nil, "", err
+			}
+
+			if _, err := io.Copy(&acl, rc); err != nil {
+				return nil, nil, "", err
+			}
+
+			uname = f.Comment
+			rc.Close()
+		}
+
+		if f.Name == "signature" {
+			rc, err := f.Open()
+			if err != nil {
+				return nil, nil, "", err
+			}
+
+			if _, err := io.Copy(&signature, rc); err != nil {
+				return nil, nil, "", err
+			}
+
+			rc.Close()
 		}
 	}
 

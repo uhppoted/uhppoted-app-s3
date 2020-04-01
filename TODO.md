@@ -9,8 +9,11 @@
 - [x] Implement 'compare-s3'
 - [ ] --zip option
 - [x] file:/// URL's
+- [ ] Throw error if tar/zip file has more than one ACL or signature
 - [ ] Documentation
       - credential file
       - URL's (https://, s3://, files:///)
       - S3/IAM recommendations
       - README
+      - tar.gz notes (uname)
+      - zip notes (uname)

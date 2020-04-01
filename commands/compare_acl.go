@@ -159,8 +159,15 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 
 	log.Printf("Fetched ACL from %v (%d bytes)", uri, len(b))
 
-	r := bytes.NewReader(b)
-	tsv, signature, uname, err := untar(r)
+	x := untar
+	if strings.HasSuffix(uri, ".zip") {
+		x = unzip
+	}
+
+	tsv, signature, uname, err := x(bytes.NewReader(b))
+	if err != nil {
+		return err
+	}
 
 	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
