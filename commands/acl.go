@@ -17,7 +17,7 @@ import (
 	"github.com/uhppoted/uhppoted-api/acl"
 	"github.com/uhppoted/uhppoted-api/config"
 	"io"
-	"log"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -58,7 +58,7 @@ func getDevices(conf *config.Config, debug bool) (uhppote.UHPPOTE, []*uhppote.De
 	return u, devices
 }
 
-func fetchHTTP(url string, log *log.Logger) ([]byte, error) {
+func fetchHTTP(url string) ([]byte, error) {
 	response, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -74,28 +74,10 @@ func fetchHTTP(url string, log *log.Logger) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func storeHTTP(uri string, r io.Reader) error {
-	rq, err := http.NewRequest("PUT", "http://localhost:8080/upload", r)
-	if err != nil {
-		return err
-	}
-
-	rq.Header.Set("Content-Type", "binary/octet-stream")
-
-	response, err := http.DefaultClient.Do(rq)
-	if err != nil {
-		return err
-	}
-
-	defer response.Body.Close()
-
-	return nil
-}
-
-func fetchS3(uri, awsconfig, region string, log *log.Logger) ([]byte, error) {
-	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
+func fetchS3(url, awsconfig, region string) ([]byte, error) {
+	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(url)
 	if len(match) != 3 {
-		return nil, fmt.Errorf("Invalid S3 URI (%s)", uri)
+		return nil, fmt.Errorf("Invalid S3 URI (%s)", url)
 	}
 
 	bucket := match[1]
@@ -118,14 +100,38 @@ func fetchS3(uri, awsconfig, region string, log *log.Logger) ([]byte, error) {
 
 	buffer := make([]byte, 1024)
 	b := aws.NewWriteAtBuffer(buffer)
-	N, err := s3manager.NewDownloader(ss).Download(b, &object)
-	if err != nil {
+	if _, err := s3manager.NewDownloader(ss).Download(b, &object); err != nil {
 		return nil, err
 	}
 
-	log.Printf("Fetched ACL from %v (%d bytes)", uri, N)
-
 	return b.Bytes(), nil
+}
+
+func fetchFile(url string) ([]byte, error) {
+	match := regexp.MustCompile("^file://(.*)").FindStringSubmatch(url)
+	if len(match) != 2 {
+		return nil, fmt.Errorf("Invalid file URI (%s)", url)
+	}
+
+	return ioutil.ReadFile(match[1])
+}
+
+func storeHTTP(uri string, r io.Reader) error {
+	rq, err := http.NewRequest("PUT", "http://localhost:8080/upload", r)
+	if err != nil {
+		return err
+	}
+
+	rq.Header.Set("Content-Type", "binary/octet-stream")
+
+	response, err := http.DefaultClient.Do(rq)
+	if err != nil {
+		return err
+	}
+
+	defer response.Body.Close()
+
+	return nil
 }
 
 func storeS3(uri, awsconfig, region string, r io.Reader) error {
@@ -160,6 +166,20 @@ func storeS3(uri, awsconfig, region string, r io.Reader) error {
 	}
 
 	return nil
+}
+
+func storeFile(url string, r io.Reader) error {
+	match := regexp.MustCompile("^file://(.*)").FindStringSubmatch(url)
+	if len(match) != 2 {
+		return fmt.Errorf("Invalid file URI (%s)", url)
+	}
+
+	b, err := ioutil.ReadAll(r)
+	if err != nil {
+		return err
+	}
+
+	return ioutil.WriteFile(match[1], b, 0660)
 }
 
 func getAWSCredentials(file string) (*credentials.Credentials, error) {
@@ -205,7 +225,7 @@ func targz(files map[string][]byte, w io.Writer) error {
 	for filename, body := range files {
 		header := &tar.Header{
 			Name:  filename,
-			Mode:  0600,
+			Mode:  0660,
 			Size:  int64(len(body)),
 			Uname: "uhppoted",
 			Gname: "uhppoted",

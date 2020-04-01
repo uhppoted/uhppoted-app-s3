@@ -148,12 +148,16 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 	f := c.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
 		f = c.fetchS3
+	} else if strings.HasPrefix(uri, "file://") {
+		f = c.fetchFile
 	}
 
-	b, err := f(uri, log)
+	b, err := f(uri)
 	if err != nil {
 		return err
 	}
+
+	log.Printf("Fetched ACL from %v (%d bytes)", uri, len(b))
 
 	r := bytes.NewReader(b)
 	tsv, signature, uname, err := untar(r)
@@ -196,34 +200,28 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 	return nil
 }
 
-func (c *CompareACL) fetchHTTP(url string, log *log.Logger) ([]byte, error) {
-	acl, err := fetchHTTP(url, log)
-	if err != nil {
-		return nil, err
-	}
+func (c *CompareACL) fetchHTTP(url string) ([]byte, error) {
+	return fetchHTTP(url)
+}
 
-	log.Printf("Fetched ACL from %v (%d bytes)", url, len(acl))
+func (c *CompareACL) fetchS3(url string) ([]byte, error) {
+	return fetchS3(url, c.credentials, c.region)
+}
 
-	return acl, nil
+func (c *CompareACL) fetchFile(url string) ([]byte, error) {
+	return fetchFile(url)
 }
 
 func (c *CompareACL) storeHTTP(url string, r io.Reader) error {
 	return storeHTTP(url, r)
 }
 
-func (c *CompareACL) fetchS3(url string, log *log.Logger) ([]byte, error) {
-	acl, err := fetchS3(url, c.credentials, c.region, log)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Fetched ACL from %v (%d bytes)", url, len(acl))
-
-	return acl, nil
-}
-
 func (c *CompareACL) storeS3(uri string, r io.Reader) error {
 	return storeS3(uri, c.credentials, c.region, r)
+}
+
+func (c *CompareACL) storeFile(url string, r io.Reader) error {
+	return storeFile(url, r)
 }
 
 func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
@@ -257,6 +255,8 @@ func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 	f := c.storeHTTP
 	if strings.HasPrefix(c.rpt, "s3://") {
 		f = c.storeS3
+	} else if strings.HasPrefix(c.rpt, "file://") {
+		f = c.storeFile
 	}
 
 	if err := f(c.rpt, bytes.NewReader(b.Bytes())); err != nil {

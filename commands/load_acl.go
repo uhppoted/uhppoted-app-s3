@@ -145,12 +145,16 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	f := l.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
 		f = l.fetchS3
+	} else if strings.HasPrefix(uri, "file://") {
+		f = l.fetchFile
 	}
 
-	b, err := f(uri, log)
+	b, err := f(uri)
 	if err != nil {
 		return err
 	}
+
+	log.Printf("Fetched ACL from %v (%d bytes)", uri, len(b))
 
 	r := bytes.NewReader(b)
 	tsv, signature, uname, err := untar(r)
@@ -189,26 +193,16 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	return err
 }
 
-func (l *LoadACL) fetchHTTP(url string, log *log.Logger) ([]byte, error) {
-	acl, err := fetchHTTP(url, log)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Printf("Fetched ACL from %v (%d bytes)", url, len(acl))
-
-	return acl, nil
+func (l *LoadACL) fetchHTTP(url string) ([]byte, error) {
+	return fetchHTTP(url)
 }
 
-func (l *LoadACL) fetchS3(url string, log *log.Logger) ([]byte, error) {
-	acl, err := fetchS3(url, l.credentials, l.region, log)
-	if err != nil {
-		return nil, err
-	}
+func (l *LoadACL) fetchS3(url string) ([]byte, error) {
+	return fetchS3(url, l.credentials, l.region)
+}
 
-	log.Printf("Fetched ACL from %v (%d bytes)", url, len(acl))
-
-	return acl, nil
+func (l *LoadACL) fetchFile(url string) ([]byte, error) {
+	return fetchFile(url)
 }
 
 func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {

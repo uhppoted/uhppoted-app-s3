@@ -153,6 +153,8 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 	f := s.storeHTTP
 	if strings.HasPrefix(uri, "s3://") {
 		f = s.storeS3
+	} else if strings.HasPrefix(uri, "file://") {
+		f = s.storeFile
 	}
 
 	if err := f(uri, bytes.NewReader(b.Bytes())); err != nil {
@@ -170,4 +172,8 @@ func (s *StoreACL) storeHTTP(url string, r io.Reader) error {
 
 func (s *StoreACL) storeS3(uri string, r io.Reader) error {
 	return storeS3(uri, s.credentials, s.region, r)
+}
+
+func (s *StoreACL) storeFile(url string, r io.Reader) error {
+	return storeFile(url, r)
 }
