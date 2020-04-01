@@ -32,11 +32,6 @@ type Report struct {
 	Diffs    map[uint32]acl.Diff
 }
 
-type File struct {
-	Name string
-	Body []byte
-}
-
 func getDevices(conf *config.Config, debug bool) (uhppote.UHPPOTE, []*uhppote.Device) {
 	keys := []uint32{}
 	for id, _ := range conf.Devices {
@@ -203,15 +198,15 @@ func getAWSCredentials(file string) (*credentials.Credentials, error) {
 	return credentials.NewStaticCredentials(awsKeyID, awsSecret, ""), nil
 }
 
-func targz(files []File, w io.Writer) error {
+func targz(files map[string][]byte, w io.Writer) error {
 	var b bytes.Buffer
 
 	tw := tar.NewWriter(&b)
-	for _, file := range files {
+	for filename, body := range files {
 		header := &tar.Header{
-			Name:  file.Name,
+			Name:  filename,
 			Mode:  0600,
-			Size:  int64(len(file.Body)),
+			Size:  int64(len(body)),
 			Uname: "uhppoted",
 			Gname: "uhppoted",
 		}
@@ -220,7 +215,7 @@ func targz(files []File, w io.Writer) error {
 			return err
 		}
 
-		if _, err := tw.Write([]byte(file.Body)); err != nil {
+		if _, err := tw.Write([]byte(body)); err != nil {
 			return err
 		}
 	}

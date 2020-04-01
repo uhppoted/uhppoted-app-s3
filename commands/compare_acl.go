@@ -243,9 +243,9 @@ func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 	}
 
 	var b bytes.Buffer
-	var files = []File{
-		{filename, rpt},
-		{"signature", signature},
+	var files = map[string][]byte{
+		filename:    rpt,
+		"signature": signature,
 	}
 
 	if err := targz(files, &b); err != nil {

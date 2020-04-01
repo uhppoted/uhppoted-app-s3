@@ -139,9 +139,9 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 	}
 
 	var b bytes.Buffer
-	var files = []File{
-		{"uhppoted.acl", tsv},
-		{"signature", signature},
+	var files = map[string][]byte{
+		"uhppoted.acl": tsv,
+		"signature":    signature,
 	}
 
 	if err := targz(files, &b); err != nil {
