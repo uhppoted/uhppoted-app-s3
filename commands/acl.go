@@ -291,12 +291,7 @@ func verify(uname string, acl, signature []byte, dir string) error {
 	return auth.Verify(uname, acl, signature, dir)
 }
 
-func report(current, list acl.ACL, format string, w io.Writer) error {
-	diff, err := acl.Compare(current, list)
-	if err != nil {
-		return err
-	}
-
+func report(diff map[uint32]acl.Diff, format string, w io.Writer) error {
 	t, err := template.New("report").Parse(format)
 	if err != nil {
 		return err

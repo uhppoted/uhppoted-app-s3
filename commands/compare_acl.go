@@ -14,7 +14,6 @@ import (
 	"log"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 )
@@ -29,7 +28,6 @@ var COMPARE_ACL = CompareACL{
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
 	noverify:    false,
-	noreport:    false,
 	nolog:       false,
 	debug:       false,
 	template: `ACL DIFF REPORT {{ .DateTime }}
@@ -57,7 +55,6 @@ type CompareACL struct {
 	logFileSize int
 	template    string
 	noverify    bool
-	noreport    bool
 	nolog       bool
 	debug       bool
 }
@@ -77,7 +74,6 @@ func (c *CompareACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&c.keyfile, "key", c.keyfile, "RSA signing key")
 	flagset.StringVar(&c.config, "config", c.config, "'conf' file to use for controller identification and configuration")
 	flagset.StringVar(&c.workdir, "workdir", c.workdir, "Sets the working directory for temporary files, etc")
-	flagset.BoolVar(&c.noreport, "no-report", c.noreport, "Disables the creation of a local report file")
 	flagset.BoolVar(&c.nolog, "no-log", c.nolog, "Writes log messages to stdout rather than a rotatable log file")
 	flagset.BoolVar(&c.debug, "debug", c.debug, "Enables debugging information")
 
@@ -109,7 +105,6 @@ func (c *CompareACL) Help() {
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", c.keysdir)
 	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)", c.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", c.config)
-	fmt.Printf("      no-report   (optional) Prints the diff to stdout rather than creating a local report file in directory '%s'\n", c.workdir)
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
@@ -117,7 +112,11 @@ func (c *CompareACL) Help() {
 
 func (c *CompareACL) Execute(ctx context.Context) error {
 	if strings.TrimSpace(c.acl) == "" {
-		return fmt.Errorf("compare-acl requires a URL for the authoritative ACL file in the command options")
+		return fmt.Errorf("compare-acl requires a URL for the authoritative ACL file")
+	}
+
+	if strings.TrimSpace(c.rpt) == "" {
+		return fmt.Errorf("compare-acl requires a URL to upload the compare report")
 	}
 
 	uri, err := url.Parse(c.acl)
@@ -181,14 +180,17 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 		return err
 	}
 
-	if err := c.report(current, list, log); err != nil {
+	diff, err := acl.Compare(current, list)
+	if err != nil {
 		return err
 	}
 
-	if c.rpt != "" {
-		if err := c.upload(current, list, log); err != nil {
-			return err
-		}
+	for k, v := range diff {
+		log.Printf("%v  SUMMARY  same:%v  different:%v  missing:%v  extraneous:%v", k, len(v.Unchanged), len(v.Updated), len(v.Added), len(v.Deleted))
+	}
+
+	if err := c.upload(diff, log); err != nil {
+		return err
 	}
 
 	return nil
@@ -224,35 +226,12 @@ func (c *CompareACL) storeS3(uri string, r io.Reader) error {
 	return storeS3(uri, c.credentials, c.region, r)
 }
 
-func (c *CompareACL) report(current, list acl.ACL, log *log.Logger) error {
-	log.Printf("Generating ACL 'diff' report")
-
-	if c.noreport {
-		report(current, list, c.template, os.Stdout)
-	} else {
-		filename := time.Now().Format("acl-2006-01-02T150405.rpt")
-		file := filepath.Join(c.workdir, filename)
-		f, err := os.Create(file)
-		if err != nil {
-			return err
-		}
-
-		defer f.Close()
-
-		log.Printf("Writing 'diff' report to %v", f.Name())
-
-		return report(current, list, c.template, f)
-	}
-
-	return nil
-}
-
-func (c *CompareACL) upload(current, list acl.ACL, log *log.Logger) error {
+func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 	log.Printf("Uploading ACL 'diff' report")
 
 	var w strings.Builder
 
-	if err := report(current, list, c.template, &w); err != nil {
+	if err := report(diff, c.template, &w); err != nil {
 		return err
 	}
 

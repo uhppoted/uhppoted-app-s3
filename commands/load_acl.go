@@ -214,7 +214,12 @@ func (l *LoadACL) fetchS3(url string, log *log.Logger) ([]byte, error) {
 func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
 	log.Printf("Generating ACL 'diff' report")
 
-	report(current, list, l.template, os.Stdout)
+	diff, err := acl.Compare(current, list)
+	if err != nil {
+		return err
+	}
+
+	report(diff, l.template, os.Stdout)
 
 	filename := time.Now().Format("acl-2006-01-02T150405.rpt")
 	file := filepath.Join(l.workdir, filename)
@@ -227,5 +232,5 @@ func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
 
 	log.Printf("Writing 'diff' report to %v", f.Name())
 
-	return report(current, list, l.template, f)
+	return report(diff, l.template, f)
 }

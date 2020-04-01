@@ -8,8 +8,9 @@
 - [x] Implement 'store-s3'
 - [x] Implement 'compare-s3'
 - [ ] --zip option
+- [ ] file:/// URL's
 - [ ] Documentation
       - credential file
-      - URL's (https://, s3://)
+      - URL's (https://, s3://, files:///)
       - S3/IAM recommendations
       - README
