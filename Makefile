@@ -50,12 +50,7 @@ release-tar: release
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) compare-acl --no-log \
-	       --credentials "../runtime/.credentials.test" \
-	       --keys        ../runtime/acl \
-	       --key         ../runtime/acl/uhppoted \
-	       --acl         "file://../runtime/simulation/QWERTY54.zip" \
-	       --report      "file://../runtime/acl/report.tar.gz"
+	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/uhppoted.zip"
 
 usage: build
 	$(CMD)
@@ -89,6 +84,9 @@ store-acl-s3: build
 store-acl-file: build
 	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/uhppoted.tar.gz"
 
+store-acl-zip: build
+	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/uhppoted.zip"
+
 compare-acl-http: build
 	$(CMD) compare-acl --no-log \
 	       --keys   ../runtime/acl \
@@ -111,5 +109,13 @@ compare-acl-file: build
 	       --key         ../runtime/acl/uhppoted \
 	       --acl         "file://../runtime/simulation/QWERTY54.tar.gz" \
 	       --report      "file://../runtime/acl/report.tar.gz"
+
+compare-acl-zip: build
+	$(CMD) compare-acl --no-log \
+	       --credentials "../runtime/.credentials.test" \
+	       --keys        ../runtime/acl \
+	       --key         ../runtime/acl/uhppoted \
+	       --acl         "file://../runtime/simulation/QWERTY54.zip" \
+	       --report      "file://../runtime/acl/report.zip"
 
 

@@ -144,7 +144,12 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 		"signature":    signature,
 	}
 
-	if err := targz(files, &b); err != nil {
+	x := targz
+	if strings.HasSuffix(uri, ".zip") {
+		x = zipf
+	}
+
+	if err := x(files, &b); err != nil {
 		return err
 	}
 

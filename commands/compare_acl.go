@@ -253,7 +253,12 @@ func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 		"signature": signature,
 	}
 
-	if err := targz(files, &b); err != nil {
+	x := targz
+	if strings.HasSuffix(c.rpt, ".zip") {
+		x = zipf
+	}
+
+	if err := x(files, &b); err != nil {
 		return err
 	}
 

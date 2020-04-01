@@ -299,6 +299,19 @@ func untar(r io.Reader) ([]byte, []byte, string, error) {
 	return acl.Bytes(), signature.Bytes(), uname, nil
 }
 
+func zipf(files map[string][]byte, w io.Writer) error {
+	zw := zip.NewWriter(w)
+	for filename, body := range files {
+		if f, err := zw.Create(filename); err != nil {
+			return err
+		} else if _, err = f.Write([]byte(body)); err != nil {
+			return err
+		}
+	}
+
+	return zw.Close()
+}
+
 func unzip(r io.Reader) ([]byte, []byte, string, error) {
 	b, err := ioutil.ReadAll(r)
 	if err != nil {
