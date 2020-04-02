@@ -11,7 +11,7 @@
 - [x] file:/// URL's
 - [x] Throw error if tar/zip file has more than one ACL or signature
 - [x] --no-verify for compare
-- [ ] --no-sign for store
+- [x] --no-sign for store
 - [x] Only throw missing signature error if not --no-verify
 - [ ] Documentation
       - credential file

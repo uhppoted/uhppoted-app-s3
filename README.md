@@ -120,7 +120,7 @@ Short form:
 ```uhppoted-acl-s3 store-acl --url <url>```
 
 Full command line:
-```uhppoted-acl-s3 store-acl [--debug]  [--no-log] [--config <file>] [--key <RSA signing key>] [--credentials <file>] [--region <region>] --url <url>```
+```uhppoted-acl-s3 store-acl [--debug]  [--no-log] [--no-sign] [--config <file>] [--key <RSA signing key>] [--credentials <file>] [--region <region>] --url <url>```
 
 ```
   --url         URL to which to store the ACL file. A URL starting with s3:// specifies 
@@ -134,6 +134,7 @@ Full command line:
   --region      AWS S3 region (e.g. us-east-1) for use with the AWS credentials
   --key         File containing the private RSA key used to sign the ACL
   --config      Sets the uhppoted.conf file to use for controller configurations
+  --no-sign     Does not sign the generated ACL file with the uhppoted RSA signing key
   --no-log      Writes log messages to the console rather than the rotating log file
   --debug       Displays verbose debugging information, in particular the communications with the UHPPOTE controllers
 ```

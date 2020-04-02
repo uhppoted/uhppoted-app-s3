@@ -36,6 +36,7 @@ type StoreACL struct {
 	region      string
 	logFile     string
 	logFileSize int
+	nosign      bool
 	nolog       bool
 	debug       bool
 }
@@ -52,6 +53,7 @@ func (s *StoreACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&s.region, "region", s.region, "The AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&s.keyfile, "key", s.keyfile, "RSA signing key")
 	flagset.StringVar(&s.config, "config", s.config, "'conf' file to use for controller identification and configuration")
+	flagset.BoolVar(&s.nosign, "no-sign", s.nosign, "Does not sign the generated report")
 	flagset.BoolVar(&s.nolog, "no-log", s.nolog, "Writes log messages to stdout rather than a rotatable log file")
 	flagset.BoolVar(&s.debug, "debug", s.debug, "Enables debugging information")
 
@@ -81,6 +83,7 @@ func (s *StoreACL) Help() {
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", s.region)
 	fmt.Printf("      key        (optional) RSA key used to sign the retrieved ACL (defaults to %s)", s.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", s.config)
+	fmt.Println("      no-sign     (optional) Disables signing of the generated report")
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
@@ -126,6 +129,7 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 		log.Printf("%v  Retrieved %v records", k, len(l))
 	}
 
+	var files = map[string][]byte{}
 	var w strings.Builder
 	err = acl.MakeTSV(list, devices, &w)
 	if err != nil {
@@ -133,17 +137,17 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 	}
 
 	tsv := []byte(w.String())
-	signature, err := sign(tsv, s.keyfile)
-	if err != nil {
-		return err
+	files["uhppoted.acl"] = tsv
+
+	if !s.nosign {
+		signature, err := sign(tsv, s.keyfile)
+		if err != nil {
+			return err
+		}
+		files["signature"] = signature
 	}
 
 	var b bytes.Buffer
-	var files = map[string][]byte{
-		"uhppoted.acl": tsv,
-		"signature":    signature,
-	}
-
 	x := targz
 	if strings.HasSuffix(uri, ".zip") {
 		x = zipf
@@ -153,7 +157,7 @@ func (s *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Devi
 		return err
 	}
 
-	log.Printf("tar'd ACL (%v bytes) and signature (%v bytes): %v bytes", len(tsv), len(signature), b.Len())
+	log.Printf("tar'd ACL (%v bytes) and signature (%v bytes): %v bytes", len(files["uhppoted.acl"]), len(files["signature"]), b.Len())
 
 	f := s.storeHTTP
 	if strings.HasPrefix(uri, "s3://") {
