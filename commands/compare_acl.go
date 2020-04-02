@@ -164,7 +164,9 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 		x = unzip
 	}
 
-	tsv, signature, uname, err := x(bytes.NewReader(b))
+	files, uname, err := x(bytes.NewReader(b))
+	tsv, _ := files["ACL"]
+	signature := files["signature"]
 	if err != nil {
 		return err
 	}

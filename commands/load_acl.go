@@ -161,7 +161,9 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 		x = unzip
 	}
 
-	tsv, signature, uname, err := x(bytes.NewReader(b))
+	files, uname, err := x(bytes.NewReader(b))
+	tsv, _ := files["ACL"]
+	signature, _ := files["signature"]
 	if err != nil {
 		return err
 	}
