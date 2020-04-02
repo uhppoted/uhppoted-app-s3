@@ -162,10 +162,18 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	}
 
 	files, uname, err := x(bytes.NewReader(b))
-	tsv, _ := files["ACL"]
-	signature, _ := files["signature"]
 	if err != nil {
 		return err
+	}
+
+	tsv, ok := files["ACL"]
+	if !ok {
+		return fmt.Errorf("ACL file missing from tar.gz")
+	}
+
+	signature, ok := files["signature"]
+	if !l.noverify && !ok {
+		return fmt.Errorf("'signature' file missing from tar.gz")
 	}
 
 	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))

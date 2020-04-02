@@ -91,6 +91,7 @@ Full command line:
                 that the file should be fetched from an AWS S3 bucket using S3 operations
                 and AWS credentials (files stored in AWS S3 buckets can also be retrieved
                 using pre-signed https:// URL's). URL's with the file:// protocol can be used to specify local files. The file is expected to be a .tar.gz or .zip archive containing an ACL and signature file (defaults to .tar.gz unless the URL ends with .zip)
+
   --credentials AWS credentials file (described below) for fetching files from s3:// URL's
   --region      AWS S3 region (e.g. us-east-1) for use with the AWS credentials
   --keys        Directory containing the public keys for RSA keys used to sign the ACL's
@@ -128,6 +129,7 @@ Full command line:
                 using a pre-signed https:// URL). URL's with the file:// protocol can be                 used to specify local files. The created file is a .tar.gz (or .zip)
                 archive containing an ACL and signature file (defaults to .tar.gz unless
                 the URL ends with .zip)
+  
   --credentials AWS credentials file (described below) for fetching files from s3:// URL's
   --region      AWS S3 region (e.g. us-east-1) for use with the AWS credentials
   --key         File containing the private RSA key used to sign the ACL
@@ -160,23 +162,25 @@ Short form:
 ```uhppoted-acl-s3 compare-acl --acl <url> --report <url>```
 
 Full command line:
-```uhppoted-acl-s3 compare-acl [--debug]  [--no-log] [--config <file>] [--workdir <dir>] [--keys <dir>] [--key <file>] [--credentials <file>] [--region <region>] --acl <url> --report <url>```
+```uhppoted-acl-s3 compare-acl [--debug]  [--no-log] [--no-verify] [--config <file>] [--keys <dir>] [--key <file>] [--credentials <file>] [--region <region>] --acl <url> --report <url>```
 
 ```
   --acl         URL from which to fetch the ACL files. A URL starting with s3:// specifies 
                 that the file should be fetched from an AWS S3 bucket using S3 operations
                 and AWS credentials (files stored in AWS S3 buckets can also be retrieved
                 using pre-signed https:// URL's). URL's with the file:// protocol can be used to specify local files. The file is expected to be a .tar.gz or .zip archive containing an ACL and signature file (defaults to .tar.gz unless the URL ends with .zip)
+  
   --report      URL to which to store the compare report file. A URL starting with s3:// specifies 
                 that the file should be stored in an AWS S3 bucket using S3 operations
                 and AWS credentials (files stored in AWS S3 buckets can also be uploaded
                 using a pre-signed https:// URL). URL's with the file:// protocol can be used to specify local files. The created file is a .tar.gz (or .zip) archive containing an ACL and signature file (defaults to .tar.gz unless the URL ends with .zip)
+  
   --credentials AWS credentials file (described below) for fetching files from s3:// URL's
   --region      AWS S3 region (e.g. us-east-1) for use with the AWS credentials
   --keys        Directory containing the public keys for RSA keys used to sign the ACL's
   --key         File containing the private RSA key used to sign the report
   --config      Sets the uhppoted.conf file to use for controller configurations
-  --workdir     Sets the working directory for generated report files
+  --no-verify   Disables verification of the ACL file signature
   --no-log      Writes log messages to the console rather than the rotating log file
   --debug       Displays verbose debugging information, in particular the communications with the UHPPOTE controllers
 ```

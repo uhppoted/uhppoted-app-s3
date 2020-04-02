@@ -20,7 +20,6 @@ import (
 
 var COMPARE_ACL = CompareACL{
 	config:      DEFAULT_CONFIG,
-	workdir:     DEFAULT_WORKDIR,
 	keysdir:     DEFAULT_KEYSDIR,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,
@@ -46,7 +45,6 @@ type CompareACL struct {
 	acl         string
 	rpt         string
 	config      string
-	workdir     string
 	keysdir     string
 	keyfile     string
 	credentials string
@@ -73,7 +71,7 @@ func (c *CompareACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&c.keysdir, "keys", c.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.StringVar(&c.keyfile, "key", c.keyfile, "RSA signing key")
 	flagset.StringVar(&c.config, "config", c.config, "'conf' file to use for controller identification and configuration")
-	flagset.StringVar(&c.workdir, "workdir", c.workdir, "Sets the working directory for temporary files, etc")
+	flagset.BoolVar(&c.noverify, "no-verify", c.noverify, "Disables verification of the downloaded ACL RSA signature")
 	flagset.BoolVar(&c.nolog, "no-log", c.nolog, "Writes log messages to stdout rather than a rotatable log file")
 	flagset.BoolVar(&c.debug, "debug", c.debug, "Enables debugging information")
 
@@ -105,6 +103,7 @@ func (c *CompareACL) Help() {
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", c.keysdir)
 	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)", c.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", c.config)
+	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", c.noverify)
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
@@ -165,10 +164,18 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 	}
 
 	files, uname, err := x(bytes.NewReader(b))
-	tsv, _ := files["ACL"]
-	signature := files["signature"]
 	if err != nil {
 		return err
+	}
+
+	tsv, ok := files["ACL"]
+	if !ok {
+		return fmt.Errorf("ACL file missing from tar.gz")
+	}
+
+	signature, ok := files["signature"]
+	if !c.noverify && !ok {
+		return fmt.Errorf("'signature' file missing from tar.gz")
 	}
 
 	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
