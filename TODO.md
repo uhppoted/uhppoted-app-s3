@@ -13,6 +13,7 @@
 - [x] --no-verify for compare
 - [x] --no-sign for store
 - [x] Only throw missing signature error if not --no-verify
-- [ ] Documentation
-      - credential file
-      - S3/IAM recommendations
+- [ ] Use [default] credentials
+- [ ] go.mod versions
+- [x] README
+      
