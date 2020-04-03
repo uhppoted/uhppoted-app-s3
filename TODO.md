@@ -1,4 +1,4 @@
-# TODO - v0.6.0x
+# TODO - v0.6.0
 
 - [x] Get from S3 with AWS credentials
 - [x] Print/log summary 
@@ -13,7 +13,6 @@
 - [x] --no-verify for compare
 - [x] --no-sign for store
 - [x] Only throw missing signature error if not --no-verify
-- [ ] Use [default] credentials
-- [ ] go.mod versions
+- [x] Use [default] credentials
 - [x] README
       

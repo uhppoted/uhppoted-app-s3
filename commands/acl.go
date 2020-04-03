@@ -3,7 +3,6 @@ package commands
 import (
 	"archive/tar"
 	"archive/zip"
-	"bufio"
 	"bytes"
 	"compress/gzip"
 	"fmt"
@@ -20,10 +19,10 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"path/filepath"
 	"regexp"
 	"sort"
+	"strings"
 	"text/template"
 	"time"
 )
@@ -184,27 +183,23 @@ func storeFile(url string, r io.Reader) error {
 }
 
 func getAWSCredentials(file string) (*credentials.Credentials, error) {
-	f, err := os.Open(file)
+	awsKeyID := ""
+	awsSecret := ""
+
+	bytes, err := ioutil.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}
 
-	defer f.Close()
-
-	awsKeyID := ""
-	awsSecret := ""
-	re := regexp.MustCompile(`\s*(aws_access_key_id|aws_secret_access_key)\s*=\s*(\S+)\s*`)
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		line := scanner.Text()
-		match := re.FindSubmatch([]byte(line))
-		if len(match) == 3 {
-			switch string(match[1]) {
-			case "aws_access_key_id":
-				awsKeyID = string(match[2])
-			case "aws_secret_access_key":
-				awsSecret = string(match[2])
-			}
+	re := regexp.MustCompile(`\[default\]\n+aws_access_key_id\s*=\s*(.*?)\n+aws_secret_access_key\s*=\s*(.*)`)
+	if match := re.FindSubmatch(bytes); len(match) == 3 {
+		awsKeyID = strings.TrimSpace(string(match[1]))
+		awsSecret = strings.TrimSpace(string(match[2]))
+	} else {
+		re = regexp.MustCompile(`\[default\]\n+aws_secret_access_key\s*=\s*(.*?)\n+aws_access_key_id\s*=\s*(.*)`)
+		if match := re.FindSubmatch(bytes); len(match) == 3 {
+			awsSecret = strings.TrimSpace(string(match[1]))
+			awsKeyID = strings.TrimSpace(string(match[2]))
 		}
 	}
 
