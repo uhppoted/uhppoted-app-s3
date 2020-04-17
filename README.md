@@ -15,10 +15,10 @@ Supported operating systems:
 
 ## Installation
 
-Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppote-acl-s3/releases):
+Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-acl-s3/releases):
 
-- [tar.gz](https://github.com/uhppoted/uhppote-acl-s3/releases/download/v0.6.0/uhppote-v0.6.0.tar.gz)
-- [zip](https://github.com/uhppoted/uhppote-acl-s3/releases/download/v0.6.0/uhppote-v0.6.0.zip)
+- [tar.gz](https://github.com/uhppoted/uhppoted-acl-s3/releases/download/v0.6.0/uhppoted-acl-s3_v0.6.0.tar.gz)
+- [zip](https://github.com/uhppoted/uhppoted-acl-s3/releases/download/v0.6.0/uhppoted-acl-s3_v0.6.0.zip)
 
 The above archives contain the executables for all the operating systems - OS specific tarballs can be found in the
 [uhpppoted](https://github.com/uhppoted/uhppoted/releases) releases.
@@ -34,7 +34,8 @@ files:
 ### `uhppoted.conf`
 
 `uhppoted.conf` is the communal configuration file shared by all the `uhppoted` project modules and is (or will 
-eventually be) documented in [uhppoted](https://github.com/uhppoted/uhppoted). `uhppoted-acl-s3` requires the _devices_ section to resolve the door to controller door identities. 
+eventually be) documented in [uhppoted](https://github.com/uhppoted/uhppoted). `uhppoted-acl-s3` requires the 
+_devices_ section to resolve non-local controller IP addresses and door to controller door identities.
 
 A sample [uhppoted.conf](https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.conf) file is included in the `uhppoted` distribution.
 
@@ -88,6 +89,8 @@ cd uhppoted-acl-s3
 mkdir bin
 go build -o bin ./...
 ```
+
+The above commands build the `'uhppoted-acl-s3` executable to the `bin` directory.
 
 #### Dependencies
 
