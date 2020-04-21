@@ -11,14 +11,17 @@ Supported operating systems:
 
 ## Releases
 
-- v0.6.0: Initial release
+| *Version* | *Description*                                                                             |
+| --------- | ----------------------------------------------------------------------------------------- |
+| v0.6.1    | Maintenance release to update module dependencies                                         |
+| v0.6.0    | Initial release                                                                           |
 
 ## Installation
 
 Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-acl-s3/releases):
 
-- [tar.gz](https://github.com/uhppoted/uhppoted-acl-s3/releases/download/v0.6.0/uhppoted-acl-s3_v0.6.0.tar.gz)
-- [zip](https://github.com/uhppoted/uhppoted-acl-s3/releases/download/v0.6.0/uhppoted-acl-s3_v0.6.0.zip)
+- [tar.gz](https://github.com/uhppoted/uhppoted-acl-s3/releases/download/v0.6.1/uhppoted-acl-s3_v0.6.1.tar.gz)
+- [zip](https://github.com/uhppoted/uhppoted-acl-s3/releases/download/v0.6.1/uhppoted-acl-s3_v0.6.1.zip)
 
 The above archives contain the executables for all the operating systems - OS specific tarballs can be found in the
 [uhpppoted](https://github.com/uhppoted/uhppoted/releases) releases.
