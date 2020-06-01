@@ -117,7 +117,7 @@ func fetchFile(url string) ([]byte, error) {
 }
 
 func storeHTTP(uri string, r io.Reader) error {
-	rq, err := http.NewRequest("PUT", "http://localhost:8080/upload", r)
+	rq, err := http.NewRequest("PUT", uri, r)
 	if err != nil {
 		return err
 	}
