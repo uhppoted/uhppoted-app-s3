@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"sort"
-	"strings"
 	"text/template"
 	"time"
 )
@@ -74,7 +73,7 @@ func fetchHTTP(url string) ([]byte, error) {
 	return b.Bytes(), nil
 }
 
-func fetchS3(url, awsconfig, region string) ([]byte, error) {
+func fetchS3(url, config, profile, region string) ([]byte, error) {
 	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(url)
 	if len(match) != 3 {
 		return nil, fmt.Errorf("Invalid S3 URI (%s)", url)
@@ -87,13 +86,8 @@ func fetchS3(url, awsconfig, region string) ([]byte, error) {
 		Key:    aws.String(key),
 	}
 
-	credentials, err := getAWSCredentials(awsconfig)
-	if err != nil {
-		return nil, err
-	}
-
 	cfg := aws.NewConfig().
-		WithCredentials(credentials).
+		WithCredentials(credentials.NewSharedCredentials(config, profile)).
 		WithRegion(region)
 
 	ss := session.Must(session.NewSession(cfg))
@@ -134,7 +128,7 @@ func storeHTTP(uri string, r io.Reader) error {
 	return nil
 }
 
-func storeS3(uri, awsconfig, region string, r io.Reader) error {
+func storeS3(uri, config, profile, region string, r io.Reader) error {
 	match := regexp.MustCompile("^s3://(.*?)/(.*)").FindStringSubmatch(uri)
 	if len(match) != 3 {
 		return fmt.Errorf("Invalid S3 URI (%s)", uri)
@@ -149,18 +143,12 @@ func storeS3(uri, awsconfig, region string, r io.Reader) error {
 		Body:   r,
 	}
 
-	credentials, err := getAWSCredentials(awsconfig)
-	if err != nil {
-		return err
-	}
-
 	cfg := aws.NewConfig().
-		WithCredentials(credentials).
+		WithCredentials(credentials.NewSharedCredentials(config, profile)).
 		WithRegion(region)
 
 	ss := session.Must(session.NewSession(cfg))
-
-	_, err = s3manager.NewUploader(ss).Upload(&object)
+	_, err := s3manager.NewUploader(ss).Upload(&object)
 	if err != nil {
 		return err
 	}
@@ -180,38 +168,6 @@ func storeFile(url string, r io.Reader) error {
 	}
 
 	return ioutil.WriteFile(match[1], b, 0660)
-}
-
-func getAWSCredentials(file string) (*credentials.Credentials, error) {
-	awsKeyID := ""
-	awsSecret := ""
-
-	bytes, err := ioutil.ReadFile(file)
-	if err != nil {
-		return nil, err
-	}
-
-	re := regexp.MustCompile(`\[default\]\n+aws_access_key_id\s*=\s*(.*?)\n+aws_secret_access_key\s*=\s*(.*)`)
-	if match := re.FindSubmatch(bytes); len(match) == 3 {
-		awsKeyID = strings.TrimSpace(string(match[1]))
-		awsSecret = strings.TrimSpace(string(match[2]))
-	} else {
-		re = regexp.MustCompile(`\[default\]\n+aws_secret_access_key\s*=\s*(.*?)\n+aws_access_key_id\s*=\s*(.*)`)
-		if match := re.FindSubmatch(bytes); len(match) == 3 {
-			awsSecret = strings.TrimSpace(string(match[1]))
-			awsKeyID = strings.TrimSpace(string(match[2]))
-		}
-	}
-
-	if awsKeyID == "" {
-		return nil, fmt.Errorf("Invalid AWS credentials - missing 'aws_access_key_id'")
-	}
-
-	if awsSecret == "" {
-		return nil, fmt.Errorf("Invalid AWS credentials - missing 'aws_secret_access_key'")
-	}
-
-	return credentials.NewStaticCredentials(awsKeyID, awsSecret, ""), nil
 }
 
 func targz(files map[string][]byte, w io.Writer) error {

@@ -23,6 +23,7 @@ var COMPARE_ACL = CompareACL{
 	keysdir:     DEFAULT_KEYSDIR,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,
+	profile:     DEFAULT_PROFILE,
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
@@ -48,6 +49,7 @@ type CompareACL struct {
 	keysdir     string
 	keyfile     string
 	credentials string
+	profile     string
 	region      string
 	logFile     string
 	logFileSize int
@@ -66,8 +68,9 @@ func (c *CompareACL) FlagSet() *flag.FlagSet {
 
 	flagset.StringVar(&c.acl, "acl", c.acl, "The URL for the authoritative ACL file")
 	flagset.StringVar(&c.rpt, "report", c.rpt, "The URL for the uploaded report file")
-	flagset.StringVar(&c.credentials, "credentials", c.credentials, "File path for the AWS credentials")
-	flagset.StringVar(&c.region, "region", c.region, "The AWS region for S3 (defaults to us-east-1)")
+	flagset.StringVar(&c.credentials, "credentials", c.credentials, "AWS credentials file")
+	flagset.StringVar(&c.profile, "profile", c.profile, "AWS credentials file profile (defaults to 'default')")
+	flagset.StringVar(&c.region, "region", c.region, "AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&c.keysdir, "keys", c.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.StringVar(&c.keyfile, "key", c.keyfile, "RSA signing key")
 	flagset.StringVar(&c.config, "config", c.config, "'conf' file to use for controller identification and configuration")
@@ -88,17 +91,18 @@ func (c *CompareACL) Usage() string {
 
 func (c *CompareACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s compare-acl <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s compare-acl [options] --acl <url> --report <url>\n", SERVICE)
 	fmt.Println()
 	fmt.Printf("    Retrieves the ACL from the controllers configured in:\n\n")
 	fmt.Printf("       %s\n\n", c.config)
-	fmt.Printf("    and stores it to the provided S3 URL\n")
-	fmt.Println()
-	fmt.Println("    Options:")
+	fmt.Printf("    and compares it to the ACL at the provided URL and stores a report at the report URL\n")
 	fmt.Println()
 	fmt.Println("      acl         (required) URL from which to fetch the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
 	fmt.Println("      report      (optional) URL to which to store the report file. S3 URL's are formatted as s3://<bucket>/<key>")
+	fmt.Println()
+	fmt.Println("    Options:")
 	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", c.credentials)
+	fmt.Printf("      profile     (optional) Profile in AWS credentials file for use with S3 URL's (defaults to %s)\n", c.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", c.region)
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", c.keysdir)
 	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)", c.keyfile)
@@ -221,7 +225,7 @@ func (c *CompareACL) fetchHTTP(url string) ([]byte, error) {
 }
 
 func (c *CompareACL) fetchS3(url string) ([]byte, error) {
-	return fetchS3(url, c.credentials, c.region)
+	return fetchS3(url, c.credentials, c.profile, c.region)
 }
 
 func (c *CompareACL) fetchFile(url string) ([]byte, error) {
@@ -233,7 +237,7 @@ func (c *CompareACL) storeHTTP(url string, r io.Reader) error {
 }
 
 func (c *CompareACL) storeS3(uri string, r io.Reader) error {
-	return storeS3(uri, c.credentials, c.region, r)
+	return storeS3(uri, c.credentials, c.profile, c.region, r)
 }
 
 func (c *CompareACL) storeFile(url string, r io.Reader) error {

@@ -21,6 +21,7 @@ var STORE_ACL = StoreACL{
 	config:      DEFAULT_CONFIG,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,
+	profile:     DEFAULT_PROFILE,
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
@@ -33,6 +34,7 @@ type StoreACL struct {
 	config      string
 	keyfile     string
 	credentials string
+	profile     string
 	region      string
 	logFile     string
 	logFileSize int
@@ -49,8 +51,9 @@ func (s *StoreACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("store-acl", flag.ExitOnError)
 
 	flagset.StringVar(&s.url, "url", s.url, "URL for a 'PUT' request to upload the retrieved ACL file")
-	flagset.StringVar(&s.credentials, "credentials", s.credentials, "File path for the AWS credentials")
-	flagset.StringVar(&s.region, "region", s.region, "The AWS region for S3 (defaults to us-east-1)")
+	flagset.StringVar(&s.credentials, "credentials", s.credentials, "AWS credentials file")
+	flagset.StringVar(&s.profile, "profile", s.profile, "AWS credentials file profile (defaults to 'default')")
+	flagset.StringVar(&s.region, "region", s.region, "AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&s.keyfile, "key", s.keyfile, "RSA signing key")
 	flagset.StringVar(&s.config, "config", s.config, "'conf' file to use for controller identification and configuration")
 	flagset.BoolVar(&s.nosign, "no-sign", s.nosign, "Does not sign the generated report")
@@ -70,16 +73,18 @@ func (s *StoreACL) Usage() string {
 
 func (s *StoreACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s store-acl <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s store-acl <url> [options]\n", SERVICE)
 	fmt.Println()
 	fmt.Printf("    Retrieves the ACL from the controllers configured in:\n\n")
 	fmt.Printf("       %s\n\n", s.config)
-	fmt.Printf("    and stores it to the provided S3 URL\n")
+	fmt.Printf("    and stores it to the provided URL\n")
+	fmt.Println()
+	fmt.Println("      url     (required) URL for the uploaded ACL file")
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Println("      url     (required) URL for the uploaded ACL file")
 	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", s.credentials)
+	fmt.Printf("      profile     (optional) Profile in AWS credentials file for use with S3 URL's (defaults to %s)\n", s.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", s.region)
 	fmt.Printf("      key        (optional) RSA key used to sign the retrieved ACL (defaults to %s)", s.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", s.config)
@@ -180,7 +185,7 @@ func (s *StoreACL) storeHTTP(url string, r io.Reader) error {
 }
 
 func (s *StoreACL) storeS3(uri string, r io.Reader) error {
-	return storeS3(uri, s.credentials, s.region, r)
+	return storeS3(uri, s.credentials, s.profile, s.region, r)
 }
 
 func (s *StoreACL) storeFile(url string, r io.Reader) error {

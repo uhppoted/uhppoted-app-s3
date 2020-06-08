@@ -101,7 +101,7 @@ compare-acl-http: build
 
 compare-acl-s3: build
 	$(CMD) compare-acl \
-	       --credentials "../runtime/.credentials.test" \
+	       --credentials "../runtime/.credential.test" \
 	       --keys        ../runtime/acl \
 	       --key         ../runtime/acl/uhppoted \
 	       --acl         "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \

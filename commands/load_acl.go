@@ -23,6 +23,7 @@ var LOAD_ACL = LoadACL{
 	workdir:     DEFAULT_WORKDIR,
 	keysdir:     DEFAULT_KEYSDIR,
 	credentials: DEFAULT_CREDENTIALS,
+	profile:     DEFAULT_PROFILE,
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
@@ -50,6 +51,7 @@ type LoadACL struct {
 	workdir     string
 	keysdir     string
 	credentials string
+	profile     string
 	region      string
 	logFile     string
 	logFileSize int
@@ -68,8 +70,9 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("load-acl", flag.ExitOnError)
 
 	flagset.StringVar(&l.url, "url", l.url, "The URL from which to fetch the ACL file")
-	flagset.StringVar(&l.credentials, "credentials", l.credentials, "Filepath for the AWS credentials")
-	flagset.StringVar(&l.region, "region", l.region, "The AWS region for S3 (defaults to us-east-1)")
+	flagset.StringVar(&l.credentials, "credentials", l.credentials, "AWS credentials file")
+	flagset.StringVar(&l.profile, "profile", l.profile, "AWS credentials file profile (defaults to 'default')")
+	flagset.StringVar(&l.region, "region", l.region, "AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.StringVar(&l.config, "config", l.config, "'conf' file to use for controller identification and configuration")
 	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
@@ -96,10 +99,12 @@ func (l *LoadACL) Help() {
 	fmt.Printf("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in:\n\n")
 	fmt.Printf("       %s\n", l.config)
 	fmt.Println()
+	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
+	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
 	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", l.credentials)
+	fmt.Printf("      profile     (optional) Profile in AWS credentials file for use with S3 URL's (defaults to %s)\n", l.credentials)
 	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", l.region)
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", l.keysdir)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", l.config)
@@ -215,7 +220,7 @@ func (l *LoadACL) fetchHTTP(url string) ([]byte, error) {
 }
 
 func (l *LoadACL) fetchS3(url string) ([]byte, error) {
-	return fetchS3(url, l.credentials, l.region)
+	return fetchS3(url, l.credentials, l.profile, l.region)
 }
 
 func (l *LoadACL) fetchFile(url string) ([]byte, error) {
