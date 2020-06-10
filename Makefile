@@ -64,6 +64,7 @@ help: build
 	$(CMD) help
 	$(CMD) help load-acl
 	$(CMD) help store-acl
+	$(CMD) help compare-acl
 
 version: build
 	$(CMD) version
@@ -101,7 +102,7 @@ compare-acl-http: build
 
 compare-acl-s3: build
 	$(CMD) compare-acl \
-	       --credentials "../runtime/.credential.test" \
+	       --credentials "../runtime/.credentials.test" \
 	       --keys        ../runtime/acl \
 	       --key         ../runtime/acl/uhppoted \
 	       --acl         "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \

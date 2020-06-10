@@ -103,11 +103,12 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", l.credentials)
-	fmt.Printf("      profile     (optional) Profile in AWS credentials file for use with S3 URL's (defaults to %s)\n", l.credentials)
-	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", l.region)
-	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", l.keysdir)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", l.config)
+	fmt.Printf("      credentials (optional) Overrides AWS credentials file path in config\n")
+	fmt.Printf("      profile     (optional) Overrides AWS credentials profile in config\n")
+	fmt.Printf("      region      (optional) Overrides AWS region in config\n")
+	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", l.keysdir)
+	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
 	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
@@ -129,6 +130,18 @@ func (l *LoadACL) Execute(ctx context.Context) error {
 	conf := config.NewConfig()
 	if err := conf.Load(l.config); err != nil {
 		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
+	}
+
+	if l.credentials == "" {
+		l.credentials = conf.AWS.Credentials
+	}
+
+	if l.profile == "" {
+		l.profile = conf.AWS.Profile
+	}
+
+	if l.region == "" {
+		l.region = conf.AWS.Region
 	}
 
 	u, devices := getDevices(conf, l.debug)

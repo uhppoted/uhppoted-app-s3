@@ -83,11 +83,11 @@ func (s *StoreACL) Help() {
 	fmt.Println()
 	fmt.Println("    Options:")
 	fmt.Println()
-	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", s.credentials)
-	fmt.Printf("      profile     (optional) Profile in AWS credentials file for use with S3 URL's (defaults to %s)\n", s.credentials)
-	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", s.region)
-	fmt.Printf("      key        (optional) RSA key used to sign the retrieved ACL (defaults to %s)", s.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", s.config)
+	fmt.Printf("      credentials (optional) Overrides AWS credentials file path in config\n")
+	fmt.Printf("      profile     (optional) Overrides AWS credentials profile in config\n")
+	fmt.Printf("      region      (optional) Overrides AWS region in config\n")
+	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)\n", s.keyfile)
 	fmt.Println("      no-sign     (optional) Disables signing of the generated report")
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
@@ -107,6 +107,18 @@ func (s *StoreACL) Execute(ctx context.Context) error {
 	conf := config.NewConfig()
 	if err := conf.Load(s.config); err != nil {
 		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
+	}
+
+	if s.credentials == "" {
+		s.credentials = conf.AWS.Credentials
+	}
+
+	if s.profile == "" {
+		s.profile = conf.AWS.Profile
+	}
+
+	if s.region == "" {
+		s.region = conf.AWS.Region
 	}
 
 	u, devices := getDevices(conf, s.debug)

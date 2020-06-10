@@ -101,12 +101,13 @@ func (c *CompareACL) Help() {
 	fmt.Println("      report      (optional) URL to which to store the report file. S3 URL's are formatted as s3://<bucket>/<key>")
 	fmt.Println()
 	fmt.Println("    Options:")
-	fmt.Printf("      credentials (optional) File path for the AWS credentials for use with S3 URL's (defaults to %s)\n", c.credentials)
-	fmt.Printf("      profile     (optional) Profile in AWS credentials file for use with S3 URL's (defaults to %s)\n", c.credentials)
-	fmt.Printf("      region      (optional) AWS region for S3 (defaults to %s)\n", c.region)
-	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s). Key files are expected to be named '<uname>.pub", c.keysdir)
-	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)", c.keyfile)
 	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", c.config)
+	fmt.Printf("      credentials (optional) Overrides AWS credentials file path in config\n")
+	fmt.Printf("      profile     (optional) Overrides AWS credentials profile in config\n")
+	fmt.Printf("      region      (optional) Overrides AWS region in config\n")
+	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", c.keysdir)
+	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
+	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)\n", c.keyfile)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", c.noverify)
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
@@ -130,6 +131,18 @@ func (c *CompareACL) Execute(ctx context.Context) error {
 	conf := config.NewConfig()
 	if err := conf.Load(c.config); err != nil {
 		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
+	}
+
+	if c.credentials == "" {
+		c.credentials = conf.AWS.Credentials
+	}
+
+	if c.profile == "" {
+		c.profile = conf.AWS.Profile
+	}
+
+	if c.region == "" {
+		c.region = conf.AWS.Region
 	}
 
 	u, devices := getDevices(conf, c.debug)
