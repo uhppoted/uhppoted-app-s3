@@ -13,6 +13,7 @@ Supported operating systems:
 
 | *Version* | *Description*                                                                             |
 | --------- | ----------------------------------------------------------------------------------------- |
+| v0.6.3    | Maintenance release to update module dependencies                                         |
 | v0.6.2    | Maintenance release to update module dependencies                                         |
 | v0.6.1    | Maintenance release to update module dependencies                                         |
 | v0.6.0    | Initial release                                                                           |
