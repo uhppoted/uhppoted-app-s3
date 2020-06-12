@@ -2,8 +2,8 @@
 
 ## IN PROGRESS
 
-- [x] Use AWS settings from config
+- [ ] 'dry-run' option for `load-acl`
 
 # TODO
 
-- [ ] Cookbook example with [rsync.net](https://www.rsync.net)
+- [ ] Cookbook example with e.g. [rsync.net](https://www.rsync.net)
