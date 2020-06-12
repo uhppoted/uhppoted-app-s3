@@ -109,7 +109,7 @@ func (c *CompareACL) Help() {
 	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
 	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)\n", c.keyfile)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", c.noverify)
-	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
+	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
 }

@@ -1,4 +1,4 @@
-module github.com/uhppoted/uhppoted-acl-s3
+module github.com/uhppoted/uhppoted-app-s3
 
 go 1.14
 

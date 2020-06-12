@@ -112,7 +112,7 @@ func (l *LoadACL) Help() {
 	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
-	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
+	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
 }

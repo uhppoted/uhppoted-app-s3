@@ -1,4 +1,4 @@
-# uhppoted-acl-s3
+# uhppoted-app-s3
 
 ```cron```'able command line utility to download access control lists stored on S3 to UHPPOTE UTO311-L0x 
 access controller boards. 
@@ -20,9 +20,9 @@ Supported operating systems:
 
 ## Installation
 
-Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-acl-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhpppoted](https://github.com/uhppoted/uhppoted/releases) releases.
+Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-app-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhpppoted](https://github.com/uhppoted/uhppoted/releases) releases.
 
-Installation is straightforward - download the archive and extract it to a directory of your choice and then place the executable in a directory in your PATH. The `uhppoted-acl-s3` utility requires the following additional 
+Installation is straightforward - download the archive and extract it to a directory of your choice and then place the executable in a directory in your PATH. The `uhppoted-app-s3` utility requires the following additional 
 files:
 
 - `uhppoted.conf`
@@ -33,7 +33,7 @@ files:
 ### `uhppoted.conf`
 
 `uhppoted.conf` is the communal configuration file shared by all the `uhppoted` project modules and is (or will 
-eventually be) documented in [uhppoted](https://github.com/uhppoted/uhppoted). `uhppoted-acl-s3` requires the 
+eventually be) documented in [uhppoted](https://github.com/uhppoted/uhppoted). `uhppoted-app-s3` requires the 
 _devices_ section to resolve non-local controller IP addresses and door to controller door identities.
 
 A sample [uhppoted.conf](https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.conf) file is included in the `uhppoted` distribution.
@@ -49,11 +49,11 @@ aws_access_key_id = AK...
 aws_secret_access_key = FR...
 ```
 
-`uhppoted-acl-s3` uses the `[default]` credentials and defaults to the `.aws/credentials` file - use the `-credentials` option to specify an alternative credentials file. Future releases may add a command line option to select alternative credential sets from within the file.
+`uhppoted-app-s3` uses the `[default]` credentials and defaults to the `.aws/credentials` file - use the `-credentials` option to specify an alternative credentials file. Future releases may add a command line option to select alternative credential sets from within the file.
 
 **NOTE:** 
 
-*It is **highly** recommended that a dedicated set of IAM credentials be created for use with `uhppoted-acl-s3`,
+*It is **highly** recommended that a dedicated set of IAM credentials be created for use with `uhppoted-app-s3`,
 with a policy that restricts access to only the required S3 buckets and keys.*
 
 ### _keys_ directory
@@ -68,7 +68,7 @@ with the `--keys` command line option for the `load` and `compare` commands.
 
 ### _key file_
 
-The _key file_ is the RSA private key used by `uhppoted-acl-s3` to sign uploaded files (derived ACL's and reports). The default key file is _<conf dir>/acl/keys/uhppoted_. An alternative _key file_ can be specified with the `--keys` command line option for the `store` and `compare` commands.
+The _key file_ is the RSA private key used by `uhppoted-app-s3` to sign uploaded files (derived ACL's and reports). The default key file is _<conf dir>/acl/keys/uhppoted_. An alternative _key file_ can be specified with the `--keys` command line option for the `store` and `compare` commands.
 
 
 ### Building from source
@@ -76,20 +76,20 @@ The _key file_ is the RSA private key used by `uhppoted-acl-s3` to sign uploaded
 Assuming you have `Go` and `make` installed:
 
 ```
-git clone https://github.com/uhppoted/uhppoted-acl-s3.git
-cd uhppoted-acl-s3
+git clone https://github.com/uhppoted/uhppoted-app-s3.git
+cd uhppoted-app-s3
 make build
 ```
 
 If you prefer not to use `make`:
 ```
-git clone https://github.com/uhppoted/uhppoted-acl-s3.git
-cd uhppoted-acl-s3
+git clone https://github.com/uhppoted/uhppoted-app-s3.git
+cd uhppoted-app-s3
 mkdir bin
 go build -o bin ./...
 ```
 
-The above commands build the `'uhppoted-acl-s3` executable to the `bin` directory.
+The above commands build the `'uhppoted-app-s3` executable to the `bin` directory.
 
 #### Dependencies
 
@@ -99,9 +99,9 @@ The above commands build the `'uhppoted-acl-s3` executable to the `bin` director
 | [com.github/uhppoted/uhppoted-api](https://github.com/uhppoted/uhppoted-api) | common API for external applications       |
 | golang.org/x/lint/golint                                                     | Additional *lint* check for release builds |
 
-## uhppoted-acl-s3
+## uhppoted-app-s3
 
-Usage: ```uhppoted-acl-s3 <command> <options>```
+Usage: ```uhppoted-app-s3 <command> <options>```
 
 Supported commands:
 
@@ -148,7 +148,7 @@ The user ID used to sign the ACL file should be included in the command to creat
 tar cvzf acl.tar.gz --uname <user id> --gname <uhppoted> myacl.acl signature
 ```
 
-and should match a public key file in the _keys_ directory for the `uhppoted-acl-s3` utility. For `.zip` archives, the user ID should be included as a comment to the ACL file entry:
+and should match a public key file in the _keys_ directory for the `uhppoted-app-s3` utility. For `.zip` archives, the user ID should be included as a comment to the ACL file entry:
 ```
 zip -c myacl.zip myacl.acl signature
 ```
@@ -157,9 +157,9 @@ A sample [tar.gz](https://github.com/uhppoted/uhppoted/blob/master/runtime/simul
 
 Command line:
 
-```uhppoted-acl-s3 load-acl --url <url>```
+```uhppoted-app-s3 load-acl --url <url>```
 
-```uhppoted-acl-s3 load-acl [--debug]  [--no-log] [--no-report] [--no-verify] [--config <file>] [--workdir <dir>] [--keys <dir>] [--credentials <file>] [--region <region>] --url <url>```
+```uhppoted-app-s3 load-acl [--debug]  [--no-log] [--no-report] [--no-verify] [--config <file>] [--workdir <dir>] [--keys <dir>] [--credentials <file>] [--region <region>] --url <url>```
 
 ```
   --url         URL from which to fetch the ACL files. A URL starting with s3:// specifies 
@@ -191,9 +191,9 @@ openssl dgst -sha256 -verify <uhppoted public key file> -signature signature <AC
 
 Command line:
 
-```uhppoted-acl-s3 store-acl --url <url>```
+```uhppoted-app-s3 store-acl --url <url>```
 
-```uhppoted-acl-s3 store-acl [--debug]  [--no-log] [--no-sign] [--config <file>] [--key <RSA signing key>] [--credentials <file>] [--region <region>] --url <url>```
+```uhppoted-app-s3 store-acl [--debug]  [--no-log] [--no-sign] [--config <file>] [--key <RSA signing key>] [--credentials <file>] [--region <region>] --url <url>```
 
 ```
   --url         URL to which to store the ACL file. A URL starting with s3:// specifies 
@@ -227,16 +227,16 @@ The user ID used to sign the ACL file should be included in the command to creat
 tar cvzf acl.tar.gz --uname <user id> --gname <uhppoted> myacl.acl signature
 ```
 
-and should match a public key file in the _keys_ directory for the `uhppoted-acl-s3` utility. For `.zip` archives, the user ID should be included as a comment to the ACL file entry:
+and should match a public key file in the _keys_ directory for the `uhppoted-app-s3` utility. For `.zip` archives, the user ID should be included as a comment to the ACL file entry:
 ```
 zip -c myacl.zip myacl.acl signature
 ```
 
 Command line:
 
-```uhppoted-acl-s3 compare-acl --acl <url> --report <url>```
+```uhppoted-app-s3 compare-acl --acl <url> --report <url>```
 
-```uhppoted-acl-s3 compare-acl [--debug]  [--no-log] [--no-verify] [--config <file>] [--keys <dir>] [--key <file>] [--credentials <file>] [--region <region>] --acl <url> --report <url>```
+```uhppoted-app-s3 compare-acl [--debug]  [--no-log] [--no-verify] [--config <file>] [--keys <dir>] [--key <file>] [--credentials <file>] [--region <region>] --acl <url> --report <url>```
 
 ```
   --acl         URL from which to fetch the ACL files. A URL starting with s3:// specifies 

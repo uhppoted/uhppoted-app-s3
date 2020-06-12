@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/uhppoted/uhppoted-acl-s3/commands"
 	"github.com/uhppoted/uhppoted-api/command"
+	"github.com/uhppoted/uhppoted-app-s3/commands"
 	"os"
 )
 

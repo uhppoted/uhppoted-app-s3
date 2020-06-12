@@ -1,5 +1,5 @@
 package commands
 
 const (
-	SERVICE = `uhppoted-acl-s3`
+	SERVICE = `uhppoted-app-s3`
 )

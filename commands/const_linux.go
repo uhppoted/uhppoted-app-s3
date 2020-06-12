@@ -8,6 +8,6 @@ const (
 	DEFAULT_CREDENTIALS = ""
 	DEFAULT_PROFILE     = ""
 	DEFAULT_REGION      = ""
-	DEFAULT_LOGFILE     = "/var/log/uhppoted/uhppoted-acl-s3.log"
+	DEFAULT_LOGFILE     = "/var/log/uhppoted/uhppoted-app-s3.log"
 	DEFAULT_LOGFILESIZE = 10
 )

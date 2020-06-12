@@ -11,5 +11,5 @@ var DEFAULT_KEYFILE = filepath.Join(workdir(), "acl", "keys", "uhppoted")
 var DEFAULT_CREDENTIALS = ""
 var DEFAULT_PROFILE = ""
 var DEFAULT_REGION = ""
-var DEFAULT_LOGFILE = filepath.Join(workdir(), "logs", "uhppoted-acl-s3.log")
+var DEFAULT_LOGFILE = filepath.Join(workdir(), "logs", "uhppoted-app-s3.log")
 var DEFAULT_LOGFILESIZE = 10

@@ -89,7 +89,7 @@ func (s *StoreACL) Help() {
 	fmt.Printf("      region      (optional) Overrides AWS region in config\n")
 	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)\n", s.keyfile)
 	fmt.Println("      no-sign     (optional) Disables signing of the generated report")
-	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-acl-s3.log file (events are logged to stdout instead)")
+	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
 	fmt.Println("      debug       (optional) Displays verbose debug information")
 	fmt.Println()
 }

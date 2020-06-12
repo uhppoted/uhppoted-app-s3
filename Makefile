@@ -1,6 +1,6 @@
 VERSION = v0.6.3
 LDFLAGS = -ldflags "-X uhppote.VERSION=$(VERSION)" 
-CMD     = ./bin/uhppoted-acl-s3
+CMD     = ./bin/uhppoted-app-s3
 DIST   ?= development
 DEBUG  ?= --debug
 
