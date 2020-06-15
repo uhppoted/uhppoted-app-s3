@@ -18,7 +18,7 @@ import (
 )
 
 var STORE_ACL = StoreACL{
-	config:      DEFAULT_CONFIG,
+	config:      config.DefaultConfig,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,
 	profile:     DEFAULT_PROFILE,

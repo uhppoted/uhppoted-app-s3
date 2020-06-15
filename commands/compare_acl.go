@@ -19,7 +19,7 @@ import (
 )
 
 var COMPARE_ACL = CompareACL{
-	config:      DEFAULT_CONFIG,
+	config:      config.DefaultConfig,
 	keysdir:     DEFAULT_KEYSDIR,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,

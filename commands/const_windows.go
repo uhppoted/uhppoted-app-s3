@@ -4,7 +4,6 @@ import (
 	"path/filepath"
 )
 
-var DEFAULT_CONFIG = filepath.Join(workdir(), "uhppoted.conf")
 var DEFAULT_WORKDIR = workdir()
 var DEFAULT_KEYSDIR = filepath.Join(workdir(), "acl", "keys")
 var DEFAULT_KEYFILE = filepath.Join(workdir(), "acl", "keys", "uhppoted")

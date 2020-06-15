@@ -5,21 +5,22 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/uhppoted/uhppote-core/device"
-	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-api/acl"
-	"github.com/uhppoted/uhppoted-api/config"
-	"github.com/uhppoted/uhppoted-api/eventlog"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/uhppoted/uhppote-core/device"
+	"github.com/uhppoted/uhppote-core/uhppote"
+	"github.com/uhppoted/uhppoted-api/acl"
+	"github.com/uhppoted/uhppoted-api/config"
+	"github.com/uhppoted/uhppoted-api/eventlog"
 )
 
 var LOAD_ACL = LoadACL{
-	config:      DEFAULT_CONFIG,
+	config:      config.DefaultConfig,
 	workdir:     DEFAULT_WORKDIR,
 	keysdir:     DEFAULT_KEYSDIR,
 	credentials: DEFAULT_CREDENTIALS,
