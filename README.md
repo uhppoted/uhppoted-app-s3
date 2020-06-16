@@ -1,3 +1,5 @@
+![build](https://github.com/uhppoted/uhppoted-app-s3/workflows/build/badge.svg)
+
 # uhppoted-app-s3
 
 ```cron```'able command line utility to download access control lists stored on S3 to UHPPOTE UTO311-L0x 
