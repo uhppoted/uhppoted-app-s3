@@ -223,7 +223,14 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 
 	rpt, err := acl.PutACL(u, list, false)
 	for k, v := range rpt {
-		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v", k, v.Unchanged, v.Updated, v.Added, v.Deleted, v.Failed)
+		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
+			k,
+			len(v.Unchanged),
+			len(v.Updated),
+			len(v.Added),
+			len(v.Deleted),
+			len(v.Failed),
+			len(v.Errors))
 	}
 
 	return err
