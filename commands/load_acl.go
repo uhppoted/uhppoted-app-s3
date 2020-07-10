@@ -116,7 +116,7 @@ func (l *LoadACL) Help() {
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", l.keysdir)
 	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
 	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
-	fmt.Printf("      strict      (optional) Fails the load if the ACL contains duplicate card numbers\n", l.strict)
+	fmt.Printf("      strict      (optional) Fails the load if the ACL contains duplicate card numbers (defaults to %v)\n", l.strict)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
