@@ -203,9 +203,13 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 		}
 	}
 
-	list, err := acl.ParseTSV(bytes.NewReader(tsv), devices)
+	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, false)
 	if err != nil {
 		return err
+	}
+
+	for _, w := range warnings {
+		log.Printf("WARN  %v", w)
 	}
 
 	for k, l := range list {

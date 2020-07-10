@@ -28,6 +28,7 @@ var LOAD_ACL = LoadACL{
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
+	strict:      false,
 	noreport:    false,
 	noverify:    false,
 	nolog:       false,
@@ -57,6 +58,7 @@ type LoadACL struct {
 	logFile     string
 	logFileSize int
 	template    string
+	strict      bool
 	noreport    bool
 	noverify    bool
 	nolog       bool
@@ -78,6 +80,7 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&l.config, "config", l.config, "'conf' file to use for controller identification and configuration")
 	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
 	flagset.BoolVar(&l.noverify, "no-verify", l.noverify, "Disables verification of the downloaded ACL RSA signature")
+	flagset.BoolVar(&l.strict, "strict", l.strict, "Fails the load if the ACL contains duplicate card numbers")
 	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
 	flagset.BoolVar(&l.nolog, "no-log", l.nolog, "Writes log messages to stdout rather than a rotatable log file")
 	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
@@ -99,6 +102,8 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 	fmt.Printf("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in:\n\n")
 	fmt.Printf("       %s\n", l.config)
+	fmt.Println("    Duplicate card numbers are ignored (or deleted if they exist) with a warning unless the --strict option")
+	fmt.Println("    is specified")
 	fmt.Println()
 	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
 	fmt.Println()
@@ -111,6 +116,7 @@ func (l *LoadACL) Help() {
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", l.keysdir)
 	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
 	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
+	fmt.Printf("      strict      (optional) Fails the load if the ACL contains duplicate card numbers\n", l.strict)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
 	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
@@ -203,9 +209,13 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 		}
 	}
 
-	list, err := acl.ParseTSV(bytes.NewReader(tsv), devices)
+	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, l.strict)
 	if err != nil {
 		return err
+	}
+
+	for _, w := range warnings {
+		log.Printf("WARN  %v", w)
 	}
 
 	for k, l := range list {
