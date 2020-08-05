@@ -13,5 +13,3 @@ replace (
 	github.com/uhppoted/uhppote-core => ../uhppote-core
 	github.com/uhppoted/uhppoted-api => ../uhppoted-api
 )
-
-

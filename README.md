@@ -22,7 +22,7 @@ Supported operating systems:
 
 ## Installation
 
-Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-app-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhpppoted](https://github.com/uhppoted/uhppoted/releases) releases.
+Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-app-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhppoted](https://github.com/uhppoted/uhppoted/releases) releases.
 
 Installation is straightforward - download the archive and extract it to a directory of your choice and then place the executable in a directory in your PATH. The `uhppoted-app-s3` utility requires the following additional 
 files:
@@ -98,7 +98,9 @@ The above commands build the `'uhppoted-app-s3` executable to the `bin` director
 | *Dependency*                                                                 | *Description*                              |
 | ---------------------------------------------------------------------------- | ------------------------------------------ |
 | [com.github/uhppoted/uhppote-core](https://github.com/uhppoted/uhppote-core) | Device level API implementation            |
-| [com.github/uhppoted/uhppoted-api](https://github.com/uhppoted/uhppoted-api) | common API for external applications       |
+| [com.github/uhppoted/uhppoted-api](https://github.com/uhppoted/uhppoted-api) | Common API for external applications       |
+| [com.github/aws/aws-sdk-go](https://github.com/aws/aw-sdk-go)                | AWS API Go library                         |
+[ golang.org/x/sys                                                             | AWS API library dependency                 |
 | golang.org/x/lint/golint                                                     | Additional *lint* check for release builds |
 
 ## uhppoted-app-s3
