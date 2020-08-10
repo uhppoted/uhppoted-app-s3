@@ -58,114 +58,104 @@ type CompareACL struct {
 	debug       bool
 }
 
-func (c *CompareACL) Name() string {
+func (cmd *CompareACL) Name() string {
 	return "compare-acl"
 }
 
-func (c *CompareACL) FlagSet() *flag.FlagSet {
+func (cmd *CompareACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("compare-acl", flag.ExitOnError)
 
-	flagset.StringVar(&c.acl, "acl", c.acl, "The URL for the authoritative ACL file")
-	flagset.StringVar(&c.rpt, "report", c.rpt, "The URL for the uploaded report file")
-	flagset.StringVar(&c.credentials, "credentials", c.credentials, "AWS credentials file")
-	flagset.StringVar(&c.profile, "profile", c.profile, "AWS credentials file profile (defaults to 'default')")
-	flagset.StringVar(&c.region, "region", c.region, "AWS region for S3 (defaults to us-east-1)")
-	flagset.StringVar(&c.keysdir, "keys", c.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
-	flagset.StringVar(&c.keyfile, "key", c.keyfile, "RSA signing key")
-	flagset.StringVar(&c.config, "config", c.config, "'conf' file to use for controller identification and configuration")
-	flagset.BoolVar(&c.noverify, "no-verify", c.noverify, "Disables verification of the downloaded ACL RSA signature")
-	flagset.BoolVar(&c.nolog, "no-log", c.nolog, "Writes log messages to stdout rather than a rotatable log file")
-	flagset.BoolVar(&c.debug, "debug", c.debug, "Enables debugging information")
+	flagset.StringVar(&cmd.acl, "acl", cmd.acl, "The URL for the authoritative ACL file")
+	flagset.StringVar(&cmd.rpt, "report", cmd.rpt, "The URL for the uploaded report file")
+	flagset.StringVar(&cmd.credentials, "credentials", cmd.credentials, "AWS credentials file")
+	flagset.StringVar(&cmd.profile, "profile", cmd.profile, "AWS credentials file profile (defaults to 'default')")
+	flagset.StringVar(&cmd.region, "region", cmd.region, "AWS region for S3 (defaults to us-east-1)")
+	flagset.StringVar(&cmd.keysdir, "keys", cmd.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
+	flagset.StringVar(&cmd.keyfile, "key", cmd.keyfile, "RSA signing key")
+	flagset.BoolVar(&cmd.noverify, "no-verify", cmd.noverify, "Disables verification of the downloaded ACL RSA signature")
+	flagset.BoolVar(&cmd.nolog, "no-log", cmd.nolog, "Writes log messages to stdout rather than a rotatable log file")
 
 	return flagset
 }
 
-func (c *CompareACL) Description() string {
-	return fmt.Sprintf("Retrieves the ACL from the configured controllers and uploads to S3")
+func (cmd *CompareACL) Description() string {
+	return fmt.Sprintf("Retrieves the ACL from the configured controllers, compares it to the authoritative ACL at the provided URL and uploads the report to S3")
 }
 
-func (c *CompareACL) Usage() string {
+func (cmd *CompareACL) Usage() string {
 	return "compare-acl <S3 URL>"
 }
 
-func (c *CompareACL) Help() {
+func (cmd *CompareACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s compare-acl [options] --acl <url> --report <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s [--debug] [--config <file>] compare--acl --acl <URL> --report <URL> [--credentials <file>] [--profile <file>] [--region <region>] [--keys <dir>] [--key <file>] [--no-verify] [--no-log]\n", APP)
 	fmt.Println()
-	fmt.Printf("    Retrieves the ACL from the controllers configured in:\n\n")
-	fmt.Printf("       %s\n\n", c.config)
-	fmt.Printf("    and compares it to the ACL at the provided URL and stores a report at the report URL\n")
+	fmt.Println("    Retrieves the ACL from the controllers configured in the configuration file, compares it to the authoritative ACL")
+	fmt.Println("    fetched from the --acl URL and uploads the comparison report to the --report URL.")
 	fmt.Println()
-	fmt.Println("      acl         (required) URL from which to fetch the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
-	fmt.Println("      report      (optional) URL to which to store the report file. S3 URL's are formatted as s3://<bucket>/<key>")
-	fmt.Println()
-	fmt.Println("    Options:")
-	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", c.config)
-	fmt.Printf("      credentials (optional) Overrides AWS credentials file path in config\n")
-	fmt.Printf("      profile     (optional) Overrides AWS credentials profile in config\n")
-	fmt.Printf("      region      (optional) Overrides AWS region in config\n")
-	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", c.keysdir)
-	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
-	fmt.Printf("      key         (optional) RSA key used to sign the retrieved ACL (defaults to %s)\n", c.keyfile)
-	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", c.noverify)
-	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
-	fmt.Println("      debug       (optional) Displays verbose debug information")
+
+	helpOptions(cmd.FlagSet())
 	fmt.Println()
 }
 
-func (c *CompareACL) Execute(args ...interface{}) error {
-	//	ctx := args[0].(context.Context)
-	if strings.TrimSpace(c.acl) == "" {
+func (cmd *CompareACL) Execute(args ...interface{}) error {
+	options := args[0].(*Options)
+
+	cmd.config = options.Config
+	cmd.debug = options.Debug
+
+	// ... check parameters
+	if strings.TrimSpace(cmd.acl) == "" {
 		return fmt.Errorf("compare-acl requires a URL for the authoritative ACL file")
 	}
 
-	if strings.TrimSpace(c.rpt) == "" {
+	if strings.TrimSpace(cmd.rpt) == "" {
 		return fmt.Errorf("compare-acl requires a URL to upload the compare report")
 	}
 
-	uri, err := url.Parse(c.acl)
+	uri, err := url.Parse(cmd.acl)
 	if err != nil {
-		return fmt.Errorf("Invalid ACL file URL '%s' (%w)", c.acl, err)
+		return fmt.Errorf("Invalid ACL file URL '%s' (%w)", cmd.acl, err)
 	}
 
 	conf := config.NewConfig()
-	if err := conf.Load(c.config); err != nil {
+	if err := conf.Load(cmd.config); err != nil {
 		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
 	}
 
-	if c.credentials == "" {
-		c.credentials = conf.AWS.Credentials
+	if cmd.credentials == "" {
+		cmd.credentials = conf.AWS.Credentials
 	}
 
-	if c.profile == "" {
-		c.profile = conf.AWS.Profile
+	if cmd.profile == "" {
+		cmd.profile = conf.AWS.Profile
 	}
 
-	if c.region == "" {
-		c.region = conf.AWS.Region
+	if cmd.region == "" {
+		cmd.region = conf.AWS.Region
 	}
 
-	u, devices := getDevices(conf, c.debug)
+	u, devices := getDevices(conf, cmd.debug)
 
 	var logger *log.Logger
-	if !c.nolog {
-		events := eventlog.Ticker{Filename: c.logFile, MaxSize: c.logFileSize}
+	if !cmd.nolog {
+		events := eventlog.Ticker{Filename: cmd.logFile, MaxSize: cmd.logFileSize}
 		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
 	} else {
 		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
 	}
 
-	return c.execute(&u, uri.String(), devices, logger)
+	return cmd.execute(&u, uri.String(), devices, logger)
 }
 
-func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
+func (cmd *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
 	log.Printf("Fetching ACL from %v", uri)
 
-	f := c.fetchHTTP
+	f := cmd.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
-		f = c.fetchS3
+		f = cmd.fetchS3
 	} else if strings.HasPrefix(uri, "file://") {
-		f = c.fetchFile
+		f = cmd.fetchFile
 	}
 
 	b, err := f(uri)
@@ -191,14 +181,14 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 	}
 
 	signature, ok := files["signature"]
-	if !c.noverify && !ok {
+	if !cmd.noverify && !ok {
 		return fmt.Errorf("'signature' file missing from tar.gz")
 	}
 
 	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
-	if !c.noverify {
-		if err := verify(uname, tsv, signature, c.keysdir); err != nil {
+	if !cmd.noverify {
+		if err := verify(uname, tsv, signature, cmd.keysdir); err != nil {
 			return err
 		}
 	}
@@ -230,49 +220,49 @@ func (c *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 		log.Printf("%v  SUMMARY  same:%v  different:%v  missing:%v  extraneous:%v", k, len(v.Unchanged), len(v.Updated), len(v.Added), len(v.Deleted))
 	}
 
-	if err := c.upload(diff, log); err != nil {
+	if err := cmd.upload(diff, log); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *CompareACL) fetchHTTP(url string) ([]byte, error) {
+func (cmd *CompareACL) fetchHTTP(url string) ([]byte, error) {
 	return fetchHTTP(url)
 }
 
-func (c *CompareACL) fetchS3(url string) ([]byte, error) {
-	return fetchS3(url, c.credentials, c.profile, c.region)
+func (cmd *CompareACL) fetchS3(url string) ([]byte, error) {
+	return fetchS3(url, cmd.credentials, cmd.profile, cmd.region)
 }
 
-func (c *CompareACL) fetchFile(url string) ([]byte, error) {
+func (cmd *CompareACL) fetchFile(url string) ([]byte, error) {
 	return fetchFile(url)
 }
 
-func (c *CompareACL) storeHTTP(url string, r io.Reader) error {
+func (cmd *CompareACL) storeHTTP(url string, r io.Reader) error {
 	return storeHTTP(url, r)
 }
 
-func (c *CompareACL) storeS3(uri string, r io.Reader) error {
-	return storeS3(uri, c.credentials, c.profile, c.region, r)
+func (cmd *CompareACL) storeS3(uri string, r io.Reader) error {
+	return storeS3(uri, cmd.credentials, cmd.profile, cmd.region, r)
 }
 
-func (c *CompareACL) storeFile(url string, r io.Reader) error {
+func (cmd *CompareACL) storeFile(url string, r io.Reader) error {
 	return storeFile(url, r)
 }
 
-func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
+func (cmd *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 	log.Printf("Uploading ACL 'diff' report")
 
 	var w strings.Builder
 
-	if err := report(diff, c.template, &w); err != nil {
+	if err := report(diff, cmd.template, &w); err != nil {
 		return err
 	}
 
 	filename := time.Now().Format("acl-2006-01-02T150405.rpt")
 	rpt := []byte(w.String())
-	signature, err := sign(rpt, c.keyfile)
+	signature, err := sign(rpt, cmd.keyfile)
 	if err != nil {
 		return err
 	}
@@ -284,7 +274,7 @@ func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 	}
 
 	x := targz
-	if strings.HasSuffix(c.rpt, ".zip") {
+	if strings.HasSuffix(cmd.rpt, ".zip") {
 		x = zipf
 	}
 
@@ -294,18 +284,18 @@ func (c *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 
 	log.Printf("tar'd report (%v bytes) and signature (%v bytes): %v bytes", len(rpt), len(signature), b.Len())
 
-	f := c.storeHTTP
-	if strings.HasPrefix(c.rpt, "s3://") {
-		f = c.storeS3
-	} else if strings.HasPrefix(c.rpt, "file://") {
-		f = c.storeFile
+	f := cmd.storeHTTP
+	if strings.HasPrefix(cmd.rpt, "s3://") {
+		f = cmd.storeS3
+	} else if strings.HasPrefix(cmd.rpt, "file://") {
+		f = cmd.storeFile
 	}
 
-	if err := f(c.rpt, bytes.NewReader(b.Bytes())); err != nil {
+	if err := f(cmd.rpt, bytes.NewReader(b.Bytes())); err != nil {
 		return err
 	}
 
-	log.Printf("Uploaded to %v", c.rpt)
+	log.Printf("Uploaded to %v", cmd.rpt)
 
 	return nil
 }

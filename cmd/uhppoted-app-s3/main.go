@@ -1,13 +1,13 @@
 package main
 
 import (
-	"context"
 	"flag"
 	"fmt"
 	"os"
 
 	"github.com/uhppoted/uhppote-core/uhppote"
 	"github.com/uhppoted/uhppoted-api/command"
+	"github.com/uhppoted/uhppoted-api/config"
 	"github.com/uhppoted/uhppoted-app-s3/commands"
 )
 
@@ -16,14 +16,21 @@ var cli = []uhppoted.CommandV{
 	&commands.STORE_ACL,
 	&commands.COMPARE_ACL,
 	&uhppoted.VersionV{
-		Application: commands.SERVICE,
+		Application: commands.APP,
 		Version:     uhppote.VERSION,
 	},
 }
 
-var help = uhppoted.NewHelpV(commands.SERVICE, cli, nil)
+var help = uhppoted.NewHelpV(commands.APP, cli, nil)
+
+var options = commands.Options{
+	Config: config.DefaultConfig,
+	Debug:  false,
+}
 
 func main() {
+	flag.StringVar(&options.Config, "config", options.Config, "configuration file to use for controller identification and configuration")
+	flag.BoolVar(&options.Debug, "debug", options.Debug, "Enable debugging information")
 	flag.Parse()
 
 	cmd, err := uhppoted.ParseV(cli, nil, help)
@@ -32,14 +39,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx := context.Background()
-
 	if cmd == nil {
-		help.Execute(ctx)
+		help.Execute()
 		os.Exit(1)
 	}
 
-	if err = cmd.Execute(ctx); err != nil {
+	if err = cmd.Execute(&options); err != nil {
 		fmt.Printf("\n   ERROR: %v\n\n", err)
 		os.Exit(1)
 	}

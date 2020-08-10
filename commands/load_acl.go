@@ -66,117 +66,103 @@ type LoadACL struct {
 	debug       bool
 }
 
-func (l *LoadACL) Name() string {
+func (cmd *LoadACL) Name() string {
 	return "load-acl"
 }
 
-func (l *LoadACL) FlagSet() *flag.FlagSet {
+func (cmd *LoadACL) FlagSet() *flag.FlagSet {
 	flagset := flag.NewFlagSet("load-acl", flag.ExitOnError)
 
-	flagset.StringVar(&l.url, "url", l.url, "The URL from which to fetch the ACL file")
-	flagset.StringVar(&l.credentials, "credentials", l.credentials, "AWS credentials file")
-	flagset.StringVar(&l.profile, "profile", l.profile, "AWS credentials file profile (defaults to 'default')")
-	flagset.StringVar(&l.region, "region", l.region, "AWS region for S3 (defaults to us-east-1)")
-	flagset.StringVar(&l.keysdir, "keys", l.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
-	flagset.StringVar(&l.config, "config", l.config, "'conf' file to use for controller identification and configuration")
-	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
-	flagset.BoolVar(&l.noverify, "no-verify", l.noverify, "Disables verification of the downloaded ACL RSA signature")
-	flagset.BoolVar(&l.dryrun, "dry-run", l.dryrun, "Simulates a load-acl without making any changes to the access controllers")
-	flagset.BoolVar(&l.strict, "strict", l.strict, "Fails the load if the ACL contains duplicate card numbers")
-	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
-	flagset.BoolVar(&l.nolog, "no-log", l.nolog, "Writes log messages to stdout rather than a rotatable log file")
-	flagset.BoolVar(&l.debug, "debug", l.debug, "Enables debugging information")
+	flagset.StringVar(&cmd.url, "url", cmd.url, "The URL from which to fetch the ACL file")
+	flagset.StringVar(&cmd.credentials, "credentials", cmd.credentials, "AWS credentials file")
+	flagset.StringVar(&cmd.profile, "profile", cmd.profile, "AWS credentials file profile (defaults to 'default')")
+	flagset.StringVar(&cmd.region, "region", cmd.region, "AWS region for S3 (defaults to us-east-1)")
+	flagset.StringVar(&cmd.keysdir, "keys", cmd.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
+	flagset.StringVar(&cmd.workdir, "workdir", cmd.workdir, "Sets the working directory for temporary files, etc")
+	flagset.BoolVar(&cmd.noverify, "no-verify", cmd.noverify, "Disables verification of the downloaded ACL RSA signature")
+	flagset.BoolVar(&cmd.dryrun, "dry-run", cmd.dryrun, "Simulates a load-acl without making any changes to the access controllers")
+	flagset.BoolVar(&cmd.strict, "strict", cmd.strict, "Fails the load if the ACL contains duplicate card numbers")
+	flagset.BoolVar(&cmd.noreport, "no-report", cmd.noreport, "Disables ACL 'diff' report")
+	flagset.BoolVar(&cmd.nolog, "no-log", cmd.nolog, "Writes log messages to stdout rather than a rotatable log file")
 
 	return flagset
 }
 
-func (l *LoadACL) Description() string {
+func (cmd *LoadACL) Description() string {
 	return fmt.Sprintf("Fetches an access control list from S3 and loads it to the configured controllers")
 }
 
-func (l *LoadACL) Usage() string {
+func (cmd *LoadACL) Usage() string {
 	return "load-acl [--debug] --url <S3 URL>"
 }
 
-func (l *LoadACL) Help() {
+func (cmd *LoadACL) Help() {
 	fmt.Println()
-	fmt.Printf("  Usage: %s load-acl [options] --url <url>\n", SERVICE)
+	fmt.Printf("  Usage: %s [--debug] [--config <file>] load-acl --url <URL> [--dry-run] [--credentials <file>] [--profile <file>] [--region <region>] [--keys <dir>] [--workdir <dir>] [--strict] [--no-verify] [--no-log] [--no-report]\n", APP)
 	fmt.Println()
-	fmt.Printf("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in:\n\n")
-	fmt.Printf("       %s\n", l.config)
-	fmt.Println("    Duplicate card numbers are ignored (or deleted if they exist) with a warning unless the --strict option")
-	fmt.Println("    is specified")
+	fmt.Println("    Fetches the ACL file stored at the pre-signed S3 URL and loads it to the controllers configured in")
+	fmt.Println("    the configuration file. Duplicate card numbers are ignored (or deleted if they exist) with a warning")
+	fmt.Println("    unless the --strict option is specified")
 	fmt.Println()
-	fmt.Println("      url         (required) URL for the ACL file. S3 URL's are formatted as s3://<bucket>/<key>")
-	fmt.Println()
-	fmt.Println("    Options:")
-	fmt.Println()
-	fmt.Printf("      config      (optional) File path for the 'conf' file containing the controller configuration (defaults to %s)\n", l.config)
-	fmt.Printf("      credentials (optional) Overrides AWS credentials file path in config\n")
-	fmt.Printf("      profile     (optional) Overrides AWS credentials profile in config\n")
-	fmt.Printf("      region      (optional) Overrides AWS region in config\n")
-	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", l.keysdir)
-	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
-	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
-	fmt.Printf("      dry-run     (optional) Simulates a load-acl without making any changes to the access controllers", l.dryrun)
-	fmt.Printf("      strict      (optional) Fails the load if the ACL contains duplicate card numbers (defaults to %v)\n", l.strict)
-	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
-	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
-	fmt.Println("      no-log      (optional) Disables event logging to the uhppoted-app-s3.log file (events are logged to stdout instead)")
-	fmt.Println("      debug       (optional) Displays verbose debug information")
+
+	helpOptions(cmd.FlagSet())
 	fmt.Println()
 }
 
-func (l *LoadACL) Execute(args ...interface{}) error {
-	//	ctx := args[0].(context.Context)
+func (cmd *LoadACL) Execute(args ...interface{}) error {
+	options := args[0].(*Options)
 
-	if strings.TrimSpace(l.url) == "" {
+	cmd.config = options.Config
+	cmd.debug = options.Debug
+
+	// ... check parameters
+	if strings.TrimSpace(cmd.url) == "" {
 		return fmt.Errorf("load-acl requires a URL for the authoritative ACL file in the command options")
 	}
 
-	uri, err := url.Parse(l.url)
+	uri, err := url.Parse(cmd.url)
 	if err != nil {
-		return fmt.Errorf("Invalid ACL file URL '%s' (%w)", l.url, err)
+		return fmt.Errorf("Invalid ACL file URL '%s' (%w)", cmd.url, err)
 	}
 
 	conf := config.NewConfig()
-	if err := conf.Load(l.config); err != nil {
+	if err := conf.Load(cmd.config); err != nil {
 		return fmt.Errorf("WARN  Could not load configuration (%v)", err)
 	}
 
-	if l.credentials == "" {
-		l.credentials = conf.AWS.Credentials
+	if cmd.credentials == "" {
+		cmd.credentials = conf.AWS.Credentials
 	}
 
-	if l.profile == "" {
-		l.profile = conf.AWS.Profile
+	if cmd.profile == "" {
+		cmd.profile = conf.AWS.Profile
 	}
 
-	if l.region == "" {
-		l.region = conf.AWS.Region
+	if cmd.region == "" {
+		cmd.region = conf.AWS.Region
 	}
 
-	u, devices := getDevices(conf, l.debug)
+	u, devices := getDevices(conf, cmd.debug)
 
 	var logger *log.Logger
-	if !l.nolog {
-		events := eventlog.Ticker{Filename: l.logFile, MaxSize: l.logFileSize}
+	if !cmd.nolog {
+		events := eventlog.Ticker{Filename: cmd.logFile, MaxSize: cmd.logFileSize}
 		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
 	} else {
 		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
 	}
 
-	return l.execute(&u, uri.String(), devices, logger)
+	return cmd.execute(&u, uri.String(), devices, logger)
 }
 
-func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
+func (cmd *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
 	log.Printf("Fetching ACL from %v", uri)
 
-	f := l.fetchHTTP
+	f := cmd.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
-		f = l.fetchS3
+		f = cmd.fetchS3
 	} else if strings.HasPrefix(uri, "file://") {
-		f = l.fetchFile
+		f = cmd.fetchFile
 	}
 
 	b, err := f(uri)
@@ -202,19 +188,19 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	}
 
 	signature, ok := files["signature"]
-	if !l.noverify && !ok {
+	if !cmd.noverify && !ok {
 		return fmt.Errorf("'signature' file missing from tar.gz")
 	}
 
 	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
-	if !l.noverify {
-		if err := verify(uname, tsv, signature, l.keysdir); err != nil {
+	if !cmd.noverify {
+		if err := verify(uname, tsv, signature, cmd.keysdir); err != nil {
 			return err
 		}
 	}
 
-	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, l.strict)
+	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, cmd.strict)
 	if err != nil {
 		return err
 	}
@@ -227,16 +213,16 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 		log.Printf("%v  Retrieved %v records", k, len(l))
 	}
 
-	if !l.noreport {
+	if !cmd.noreport {
 		current, err := acl.GetACL(u, devices)
 		if err != nil {
 			return err
 		}
 
-		l.report(current, list, log)
+		cmd.report(current, list, log)
 	}
 
-	rpt, err := acl.PutACL(u, list, l.dryrun)
+	rpt, err := acl.PutACL(u, list, cmd.dryrun)
 	for k, v := range rpt {
 		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
 			k,
@@ -251,19 +237,19 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 	return err
 }
 
-func (l *LoadACL) fetchHTTP(url string) ([]byte, error) {
+func (cmd *LoadACL) fetchHTTP(url string) ([]byte, error) {
 	return fetchHTTP(url)
 }
 
-func (l *LoadACL) fetchS3(url string) ([]byte, error) {
-	return fetchS3(url, l.credentials, l.profile, l.region)
+func (cmd *LoadACL) fetchS3(url string) ([]byte, error) {
+	return fetchS3(url, cmd.credentials, cmd.profile, cmd.region)
 }
 
-func (l *LoadACL) fetchFile(url string) ([]byte, error) {
+func (cmd *LoadACL) fetchFile(url string) ([]byte, error) {
 	return fetchFile(url)
 }
 
-func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
+func (cmd *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
 	log.Printf("Generating ACL 'diff' report")
 
 	diff, err := acl.Compare(current, list)
@@ -271,10 +257,10 @@ func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
 		return err
 	}
 
-	report(diff, l.template, os.Stdout)
+	report(diff, cmd.template, os.Stdout)
 
 	filename := time.Now().Format("acl-2006-01-02T150405.rpt")
-	file := filepath.Join(l.workdir, filename)
+	file := filepath.Join(cmd.workdir, filename)
 	f, err := os.Create(file)
 	if err != nil {
 		return err
@@ -284,5 +270,5 @@ func (l *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
 
 	log.Printf("Writing 'diff' report to %v", f.Name())
 
-	return report(diff, l.template, f)
+	return report(diff, cmd.template, f)
 }

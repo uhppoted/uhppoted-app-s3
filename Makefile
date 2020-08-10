@@ -50,7 +50,7 @@ release: build-all
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) load-acl  \
+	$(CMD) --debug load-acl  \
 	       --dry-run \
 	       --strict  \
 	       --keys ../runtime/acl \
