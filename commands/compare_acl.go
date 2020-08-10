@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"fmt"
 	"github.com/uhppoted/uhppote-core/device"
@@ -114,7 +113,8 @@ func (c *CompareACL) Help() {
 	fmt.Println()
 }
 
-func (c *CompareACL) Execute(ctx context.Context) error {
+func (c *CompareACL) Execute(args ...interface{}) error {
+	//	ctx := args[0].(context.Context)
 	if strings.TrimSpace(c.acl) == "" {
 		return fmt.Errorf("compare-acl requires a URL for the authoritative ACL file")
 	}

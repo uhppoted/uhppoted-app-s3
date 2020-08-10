@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"fmt"
 	"github.com/uhppoted/uhppote-core/device"
@@ -94,7 +93,8 @@ func (s *StoreACL) Help() {
 	fmt.Println()
 }
 
-func (s *StoreACL) Execute(ctx context.Context) error {
+func (s *StoreACL) Execute(args ...interface{}) error {
+	//	ctx := args[0].(context.Context)
 	if strings.TrimSpace(s.url) == "" {
 		return fmt.Errorf("store-acl requires a pre-signed S3 URL in the command options")
 	}

@@ -2,7 +2,6 @@ package commands
 
 import (
 	"bytes"
-	"context"
 	"flag"
 	"fmt"
 	"log"
@@ -28,6 +27,7 @@ var LOAD_ACL = LoadACL{
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
+	dryrun:      false,
 	strict:      false,
 	noreport:    false,
 	noverify:    false,
@@ -58,6 +58,7 @@ type LoadACL struct {
 	logFile     string
 	logFileSize int
 	template    string
+	dryrun      bool
 	strict      bool
 	noreport    bool
 	noverify    bool
@@ -80,6 +81,7 @@ func (l *LoadACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&l.config, "config", l.config, "'conf' file to use for controller identification and configuration")
 	flagset.StringVar(&l.workdir, "workdir", l.workdir, "Sets the working directory for temporary files, etc")
 	flagset.BoolVar(&l.noverify, "no-verify", l.noverify, "Disables verification of the downloaded ACL RSA signature")
+	flagset.BoolVar(&l.dryrun, "dry-run", l.dryrun, "Simulates a load-acl without making any changes to the access controllers")
 	flagset.BoolVar(&l.strict, "strict", l.strict, "Fails the load if the ACL contains duplicate card numbers")
 	flagset.BoolVar(&l.noreport, "no-report", l.noreport, "Disables ACL 'diff' report")
 	flagset.BoolVar(&l.nolog, "no-log", l.nolog, "Writes log messages to stdout rather than a rotatable log file")
@@ -116,6 +118,7 @@ func (l *LoadACL) Help() {
 	fmt.Printf("      keys        (optional) Directory containing for RSA signing keys (defaults to %s).\n", l.keysdir)
 	fmt.Printf("                             Key files are expected to be named '<uname>.pub\n")
 	fmt.Printf("      workdir     (optional) Sets the working directory for temporary files, etc (defaults to %s)\n", l.workdir)
+	fmt.Printf("      dry-run     (optional) Simulates a load-acl without making any changes to the access controllers", l.dryrun)
 	fmt.Printf("      strict      (optional) Fails the load if the ACL contains duplicate card numbers (defaults to %v)\n", l.strict)
 	fmt.Printf("      no-verify   (optional) Disables verification of the ACL signature. Defaults to '%v'\n", l.noverify)
 	fmt.Println("      no-report   (optional) Disables creation of the 'diff' between the current and fetched ACL's")
@@ -124,7 +127,9 @@ func (l *LoadACL) Help() {
 	fmt.Println()
 }
 
-func (l *LoadACL) Execute(ctx context.Context) error {
+func (l *LoadACL) Execute(args ...interface{}) error {
+	//	ctx := args[0].(context.Context)
+
 	if strings.TrimSpace(l.url) == "" {
 		return fmt.Errorf("load-acl requires a URL for the authoritative ACL file in the command options")
 	}
@@ -231,7 +236,7 @@ func (l *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Devic
 		l.report(current, list, log)
 	}
 
-	rpt, err := acl.PutACL(u, list, false)
+	rpt, err := acl.PutACL(u, list, l.dryrun)
 	for k, v := range rpt {
 		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
 			k,

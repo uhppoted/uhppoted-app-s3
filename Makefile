@@ -50,12 +50,12 @@ release: build-all
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
 
 debug: build
-	$(CMD) compare-acl --no-log \
+	$(CMD) load-acl  \
+	       --dry-run \
+	       --strict  \
+	       --keys ../runtime/acl \
 	       --credentials "../runtime/.credentials.test" \
-	       --keys        ../runtime/acl \
-	       --key         ../runtime/acl/uhppoted \
-	       --acl         "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \
-	       --report      "s3://uhppoted-test/simulation/report.tar.gz"
+	       --url "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \
 
 usage: build
 	$(CMD)

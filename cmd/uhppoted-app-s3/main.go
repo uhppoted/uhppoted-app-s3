@@ -2,23 +2,31 @@ package main
 
 import (
 	"context"
+	"flag"
 	"fmt"
+	"os"
+
+	"github.com/uhppoted/uhppote-core/uhppote"
 	"github.com/uhppoted/uhppoted-api/command"
 	"github.com/uhppoted/uhppoted-app-s3/commands"
-	"os"
 )
 
-var cli = []uhppoted.Command{
+var cli = []uhppoted.CommandV{
 	&commands.LOAD_ACL,
 	&commands.STORE_ACL,
 	&commands.COMPARE_ACL,
-	&uhppoted.VERSION,
+	&uhppoted.VersionV{
+		Application: commands.SERVICE,
+		Version:     uhppote.VERSION,
+	},
 }
 
-var help = uhppoted.NewHelp(commands.SERVICE, cli, nil)
+var help = uhppoted.NewHelpV(commands.SERVICE, cli, nil)
 
 func main() {
-	cmd, err := uhppoted.Parse(cli, nil, help)
+	flag.Parse()
+
+	cmd, err := uhppoted.ParseV(cli, nil, help)
 	if err != nil {
 		fmt.Printf("\nError parsing command line: %v\n\n", err)
 		os.Exit(1)
