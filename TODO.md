@@ -2,7 +2,7 @@
 
 ## IN PROGRESS
 
-- [x] Rework commands for uhppoted-api CommandV
+- [x] Rework commands for uhppoted-api Command
 - [x] 'dry-run' option for `load-acl`
 
 # TODO

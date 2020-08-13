@@ -11,17 +11,17 @@ import (
 	"github.com/uhppoted/uhppoted-app-s3/commands"
 )
 
-var cli = []uhppoted.CommandV{
+var cli = []uhppoted.Command{
 	&commands.LOAD_ACL,
 	&commands.STORE_ACL,
 	&commands.COMPARE_ACL,
-	&uhppoted.VersionV{
+	&uhppoted.Version{
 		Application: commands.APP,
 		Version:     uhppote.VERSION,
 	},
 }
 
-var help = uhppoted.NewHelpV(commands.APP, cli, nil)
+var help = uhppoted.NewHelp(commands.APP, cli, nil)
 
 var options = commands.Options{
 	Config: config.DefaultConfig,
@@ -33,7 +33,7 @@ func main() {
 	flag.BoolVar(&options.Debug, "debug", options.Debug, "Enable debugging information")
 	flag.Parse()
 
-	cmd, err := uhppoted.ParseV(cli, nil, help)
+	cmd, err := uhppoted.Parse(cli, nil, help)
 	if err != nil {
 		fmt.Printf("\nError parsing command line: %v\n\n", err)
 		os.Exit(1)
