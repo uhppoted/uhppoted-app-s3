@@ -4,6 +4,8 @@ CMD     = ./bin/uhppoted-app-s3
 DIST   ?= development
 DEBUG  ?= --debug
 
+.PHONY: bump
+
 all: test      \
 	 benchmark \
      coverage
@@ -48,6 +50,12 @@ release: build-all
 	find . -name ".DS_Store" -delete
 	tar --directory=dist --exclude=".DS_Store" -cvzf dist/$(DIST).tar.gz $(DIST)
 	cd dist; zip --recurse-paths $(DIST).zip $(DIST)
+
+bump:
+	go get -u github.com/uhppoted/uhppote-core
+	go get -u github.com/uhppoted/uhppoted-api
+	go get -u github.com/aws/aws-sdk-go
+	go get -u golang.org/x/sys
 
 debug: build
 	$(CMD) --debug load-acl  \
