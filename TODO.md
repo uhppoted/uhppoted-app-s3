@@ -1,9 +1,6 @@
 # TODO - v0.6.x
 
-## IN PROGRESS
-
-- [x] Rework commands for uhppoted-api Command
-- [x] 'dry-run' option for `load-acl`
+### IN PROGRESS
 
 # TODO
 
