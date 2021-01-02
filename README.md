@@ -15,6 +15,7 @@ Supported operating systems:
 
 | *Version* | *Description*                                                                             |
 | --------- | ----------------------------------------------------------------------------------------- |
+| v0.6.7    | Maintenance release for version compatibility with `uhppoted-api` `v.0.6.7`               |
 | v0.6.5    | Maintenance release for version compatibility with `node-red-contrib-uhppoted`            |
 | v0.6.4    | Maintenance release for version compatibility with `uhppoted-app-sheets`                  |
 | v0.6.3    | Maintenance release to update module dependencies                                         |
