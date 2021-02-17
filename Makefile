@@ -1,4 +1,4 @@
-VERSION = v0.6.8
+VERSION = v0.6.10
 LDFLAGS = -ldflags "-X uhppote.VERSION=$(VERSION)" 
 CMD     = ./bin/uhppoted-app-s3
 DIST   ?= development
