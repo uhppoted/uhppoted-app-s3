@@ -123,9 +123,9 @@ func (cmd *StoreACL) Execute(args ...interface{}) error {
 func (cmd *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
 	log.Printf("Storing ACL to %v", uri)
 
-	list, err := acl.GetACL(u, devices)
-	if err != nil {
-		return err
+	list, errors := acl.GetACL(u, devices)
+	if len(errors) > 0 {
+		return fmt.Errorf("%v", errors)
 	}
 
 	for k, l := range list {
@@ -134,8 +134,7 @@ func (cmd *StoreACL) execute(u device.IDevice, uri string, devices []*uhppote.De
 
 	var files = map[string][]byte{}
 	var w strings.Builder
-	err = acl.MakeTSV(list, devices, &w)
-	if err != nil {
+	if err := acl.MakeTSV(list, devices, &w); err != nil {
 		return err
 	}
 

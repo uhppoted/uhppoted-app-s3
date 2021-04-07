@@ -214,15 +214,15 @@ func (cmd *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Dev
 	}
 
 	if !cmd.noreport {
-		current, err := acl.GetACL(u, devices)
-		if err != nil {
-			return err
+		current, errors := acl.GetACL(u, devices)
+		if len(errors) > 0 {
+			return fmt.Errorf("%v", errors)
 		}
 
 		cmd.report(current, list, log)
 	}
 
-	rpt, err := acl.PutACL(u, list, cmd.dryrun)
+	rpt, errors := acl.PutACL(u, list, cmd.dryrun)
 	for k, v := range rpt {
 		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
 			k,
@@ -234,7 +234,11 @@ func (cmd *LoadACL) execute(u device.IDevice, uri string, devices []*uhppote.Dev
 			len(v.Errors))
 	}
 
-	return err
+	if len(errors) > 0 {
+		return fmt.Errorf("%v", errors)
+	}
+
+	return nil
 }
 
 func (cmd *LoadACL) fetchHTTP(url string) ([]byte, error) {

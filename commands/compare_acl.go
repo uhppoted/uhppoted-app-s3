@@ -206,9 +206,9 @@ func (cmd *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.
 		log.Printf("%v  Retrieved %v records", k, len(l))
 	}
 
-	current, err := acl.GetACL(u, devices)
-	if err != nil {
-		return err
+	current, errors := acl.GetACL(u, devices)
+	if len(errors) > 0 {
+		return fmt.Errorf("%v", errors)
 	}
 
 	diff, err := acl.Compare(current, list)
