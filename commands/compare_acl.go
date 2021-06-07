@@ -4,17 +4,17 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"github.com/uhppoted/uhppote-core/device"
-	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-api/acl"
-	"github.com/uhppoted/uhppoted-api/config"
-	"github.com/uhppoted/uhppoted-api/eventlog"
 	"io"
 	"log"
 	"net/url"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/uhppoted/uhppote-core/uhppote"
+	"github.com/uhppoted/uhppoted-api/acl"
+	"github.com/uhppoted/uhppoted-api/config"
+	"github.com/uhppoted/uhppoted-api/eventlog"
 )
 
 var COMPARE_ACL = CompareACL{
@@ -145,10 +145,10 @@ func (cmd *CompareACL) Execute(args ...interface{}) error {
 		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
 	}
 
-	return cmd.execute(&u, uri.String(), devices, logger)
+	return cmd.execute(u, uri.String(), devices, logger)
 }
 
-func (cmd *CompareACL) execute(u device.IDevice, uri string, devices []*uhppote.Device, log *log.Logger) error {
+func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device, log *log.Logger) error {
 	log.Printf("Fetching ACL from %v", uri)
 
 	f := cmd.fetchHTTP
