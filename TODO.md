@@ -2,12 +2,9 @@
 
 ### IN PROGRESS
 
-- [ ] Add _time profile_ support to `downoad-acl`
-- [ ] Add _time profile_ support to `compare-acl`
-- [ ] TSV file destination
-- [ ] Text file destination
-
-- [x] Add _time profile_ support to `upload-acl`
+- [x] Add _time profile_ support to `compare-acl`
+- [x] Add _time profile_ support to `load-acl`
+- [x] Add _time profile_ support to `store-acl`
 - [x] Update for latest `uhppote-core` and `uhppoted-api`
 
 # TODO

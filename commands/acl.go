@@ -26,7 +26,7 @@ import (
 )
 
 type Report struct {
-	DateTime types.DateTime
+	DateTime *types.DateTime
 	Diffs    map[uint32]acl.Diff
 }
 
@@ -371,8 +371,10 @@ func report(diff map[uint32]acl.Diff, format string, w io.Writer) error {
 		return err
 	}
 
+	timestamp := types.DateTime(time.Now())
+
 	rpt := Report{
-		DateTime: types.DateTime(time.Now()),
+		DateTime: &timestamp,
 		Diffs:    diff,
 	}
 
