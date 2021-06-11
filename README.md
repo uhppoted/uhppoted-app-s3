@@ -15,6 +15,7 @@ Supported operating systems:
 
 | *Version* | *Description*                                                                             |
 | --------- | ----------------------------------------------------------------------------------------- |
+| v0.7.0    | Added support for time profiles from the extended API                                     |
 | v0.6.12   | Maintenance release to update dependencies on `uhppote-core` and `uhppoted-api`           |
 | v0.6.10   | Maintenance release for version compatibility with `uhppoted-app-wild-apricot`            |
 | v0.6.8    | Maintenance release for version compatibility with `uhppote-core` `v.0.6.8`               |
@@ -127,7 +128,7 @@ The only currently supported ACL file format is TSV (tab separated values) and i
 
     Card Number	From	To	Workshop	Side Door	Front Door	Garage	Upstairs	Downstairs	Tower	Cellar
     123465537	2020-01-01	2020-12-31	N	N	Y	N	Y	N	Y	Y
-    231465538	2020-01-01	2020-12-31	Y	N	Y	N	N	Y	N	N
+    231465538	2020-01-01	2020-12-31	Y	N	Y	N	N	Y	29	N
     635465539	2020-01-01	2020-12-31	N	N	N	N	Y	N	Y	Y
 
 | Field         | Description                                                                |

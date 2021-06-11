@@ -1,6 +1,4 @@
-# TODO - v0.7.x
-
-### IN PROGRESS
+# TODO - v0.7.0
 
 - [x] Add _time profile_ support to `compare-acl`
 - [x] Add _time profile_ support to `load-acl`
