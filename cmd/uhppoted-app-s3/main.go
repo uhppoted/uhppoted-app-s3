@@ -6,15 +6,15 @@ import (
 	"os"
 
 	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-api/command"
-	"github.com/uhppoted/uhppoted-api/config"
 	"github.com/uhppoted/uhppoted-app-s3/commands"
+	"github.com/uhppoted/uhppoted-lib/command"
+	"github.com/uhppoted/uhppoted-lib/config"
 )
 
 var cli = []uhppoted.Command{
-	&commands.LOAD_ACL,
-	&commands.STORE_ACL,
-	&commands.COMPARE_ACL,
+	&commands.LoadACLCmd,
+	&commands.StoreACLCmd,
+	&commands.CompareACLCmd,
 	&uhppoted.Version{
 		Application: commands.APP,
 		Version:     uhppote.VERSION,

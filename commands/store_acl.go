@@ -11,12 +11,12 @@ import (
 	"strings"
 
 	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-api/acl"
-	"github.com/uhppoted/uhppoted-api/config"
-	"github.com/uhppoted/uhppoted-api/eventlog"
+	"github.com/uhppoted/uhppoted-lib/acl"
+	"github.com/uhppoted/uhppoted-lib/config"
+	"github.com/uhppoted/uhppoted-lib/eventlog"
 )
 
-var STORE_ACL = StoreACL{
+var StoreACLCmd = StoreACL{
 	config:      config.DefaultConfig,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,

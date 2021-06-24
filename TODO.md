@@ -1,9 +1,6 @@
-# TODO - v0.7.0
+# TODO - v0.7.x
 
-- [x] Add _time profile_ support to `compare-acl`
-- [x] Add _time profile_ support to `load-acl`
-- [x] Add _time profile_ support to `store-acl`
-- [x] Update for latest `uhppote-core` and `uhppoted-api`
+- [x] Update for latest `uhppote-core` and `uhppoted-lib`
 
 # TODO
 

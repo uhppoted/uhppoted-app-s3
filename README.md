@@ -105,7 +105,7 @@ The above commands build the `'uhppoted-app-s3` executable to the `bin` director
 | *Dependency*                                                                 | *Description*                              |
 | ---------------------------------------------------------------------------- | ------------------------------------------ |
 | [com.github/uhppoted/uhppote-core](https://github.com/uhppoted/uhppote-core) | Device level API implementation            |
-| [com.github/uhppoted/uhppoted-api](https://github.com/uhppoted/uhppoted-api) | Common API for external applications       |
+| [com.github/uhppoted-lib](https://github.com/uhppoted/uhppoted-lib)          | Shared application library                 |
 | [com.github/aws/aws-sdk-go](https://github.com/aws/aw-sdk-go)                | AWS API Go library                         |
 [ golang.org/x/sys                                                             | AWS API library dependency                 |
 | golang.org/x/lint/golint                                                     | Additional *lint* check for release builds |

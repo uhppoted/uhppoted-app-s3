@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-api/acl"
-	"github.com/uhppoted/uhppoted-api/config"
-	"github.com/uhppoted/uhppoted-api/eventlog"
+	"github.com/uhppoted/uhppoted-lib/acl"
+	"github.com/uhppoted/uhppoted-lib/config"
+	"github.com/uhppoted/uhppoted-lib/eventlog"
 )
 
-var COMPARE_ACL = CompareACL{
+var CompareACLCmd = CompareACL{
 	config:      config.DefaultConfig,
 	keysdir:     DEFAULT_KEYSDIR,
 	keyfile:     DEFAULT_KEYFILE,

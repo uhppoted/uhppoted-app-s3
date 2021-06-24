@@ -1,4 +1,4 @@
-VERSION = v0.7.0
+VERSION = v0.7.x
 LDFLAGS = -ldflags "-X uhppote.VERSION=$(VERSION)" 
 CMD     = ./bin/uhppoted-app-s3
 DIST   ?= development
@@ -53,7 +53,7 @@ release: build-all
 
 bump:
 	go get -u github.com/uhppoted/uhppote-core
-	go get -u github.com/uhppoted/uhppoted-api
+	go get -u github.com/uhppoted/uhppoted-lib
 	go get -u github.com/aws/aws-sdk-go
 	go get -u golang.org/x/sys
 

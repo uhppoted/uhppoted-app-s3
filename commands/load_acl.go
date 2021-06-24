@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-api/acl"
-	"github.com/uhppoted/uhppoted-api/config"
-	"github.com/uhppoted/uhppoted-api/eventlog"
+	"github.com/uhppoted/uhppoted-lib/acl"
+	"github.com/uhppoted/uhppoted-lib/config"
+	"github.com/uhppoted/uhppoted-lib/eventlog"
 )
 
-var LOAD_ACL = LoadACL{
+var LoadACLCmd = LoadACL{
 	config:      config.DefaultConfig,
 	workdir:     DEFAULT_WORKDIR,
 	keysdir:     DEFAULT_KEYSDIR,
