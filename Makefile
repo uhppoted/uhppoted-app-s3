@@ -1,8 +1,6 @@
-VERSION = v0.7.x
-LDFLAGS = -ldflags "-X uhppote.VERSION=$(VERSION)" 
-CMD     = ./bin/uhppoted-app-s3
-DIST   ?= development
-DEBUG  ?= --debug
+CMD   = ./bin/uhppoted-app-s3
+DIST  ?= development
+DEBUG ?= --debug
 
 .PHONY: bump
 
