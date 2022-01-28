@@ -97,7 +97,7 @@ If you prefer not to use `make`:
 git clone https://github.com/uhppoted/uhppoted-app-s3.git
 cd uhppoted-app-s3
 mkdir bin
-go build -o bin ./...
+go build -trimpath -o bin ./...
 ```
 
 The above commands build the `'uhppoted-app-s3` executable to the `bin` directory.
