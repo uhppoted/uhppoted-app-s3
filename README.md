@@ -15,6 +15,7 @@ Supported operating systems:
 
 | *Version* | *Description*                                                                             |
 | --------- | ----------------------------------------------------------------------------------------- |
+| v0.7.3    | Maintenance release to update dependencies on `uhppote-core` and `uhppoted-lib`           |
 | v0.7.2    | Maintenance release to update dependencies on `uhppote-core` and `uhppoted-lib`           |
 | v0.7.1    | Maintenance release to update dependencies on `uhppote-core` and `uhppoted-lib`           |
 | v0.7.0    | Added support for time profiles from the extended API                                     |
