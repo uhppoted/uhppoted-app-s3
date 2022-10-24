@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [Unreleased]
+
+1. Moved default `git` branch to `main`, in line with current development practice.
+
 ## [0.8.2](https://github.com/uhppoted/uhppoted-app-s3/releases/tag/v0.8.2) - 2022-10-14
 
 ### Changed
