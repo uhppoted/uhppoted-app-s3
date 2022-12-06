@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"flag"
 	"fmt"
-	"log"
+	syslog "log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -15,6 +15,7 @@ import (
 	"github.com/uhppoted/uhppoted-lib/acl"
 	"github.com/uhppoted/uhppoted-lib/config"
 	"github.com/uhppoted/uhppoted-lib/eventlog"
+	"github.com/uhppoted/uhppoted-lib/lockfile"
 )
 
 var LoadACLCmd = LoadACL{
@@ -143,18 +144,33 @@ func (cmd *LoadACL) Execute(args ...interface{}) error {
 
 	u, devices := getDevices(conf, cmd.debug)
 
-	var logger *log.Logger
+	var logger *syslog.Logger
 	if !cmd.nolog {
 		events := eventlog.Ticker{Filename: cmd.logFile, MaxSize: cmd.logFileSize}
-		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
+		logger = syslog.New(&events, "", syslog.Ldate|syslog.Ltime|syslog.LUTC)
 	} else {
-		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
+		logger = syslog.New(os.Stdout, "ACL ", syslog.LstdFlags|syslog.LUTC|syslog.Lmsgprefix)
+	}
+
+	// ... locked?
+	lockFile := config.Lockfile{
+		File:   filepath.Join(cmd.workdir, "uhppoted-app-s3.lock"),
+		Remove: false, // FIXME use lockfile.RemoveLockfile when Go package repository has updated
+	}
+
+	if kraken, err := lockfile.MakeLockFile(lockFile); err != nil {
+		return err
+	} else {
+		defer func() {
+			infof("Removing lockfile '%v'", lockFile.File)
+			kraken.Release()
+		}()
 	}
 
 	return cmd.execute(u, uri.String(), devices, logger)
 }
 
-func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device, log *log.Logger) error {
+func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device, log *syslog.Logger) error {
 	log.Printf("Fetching ACL from %v", uri)
 
 	f := cmd.fetchHTTP
@@ -252,7 +268,7 @@ func (cmd *LoadACL) fetchFile(url string) ([]byte, error) {
 	return fetchFile(url)
 }
 
-func (cmd *LoadACL) report(current, list acl.ACL, log *log.Logger) error {
+func (cmd *LoadACL) report(current, list acl.ACL, log *syslog.Logger) error {
 	log.Printf("Generating ACL 'diff' report")
 
 	diff, err := acl.Compare(current, list)

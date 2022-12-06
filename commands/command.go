@@ -3,6 +3,8 @@ package commands
 import (
 	"flag"
 	"fmt"
+
+	"github.com/uhppoted/uhppoted-app-s3/log"
 )
 
 const APP = "uhppoted-app-s3"
@@ -29,4 +31,20 @@ func helpOptions(flagset *flag.FlagSet) {
 			fmt.Printf("    --%-13s %s\n", f.Name, f.Usage)
 		})
 	}
+}
+
+func debugf(format string, args ...any) {
+	log.Debugf(format, args...)
+}
+
+func infof(format string, args ...any) {
+	log.Infof(format, args...)
+}
+
+func warnf(format string, args ...any) {
+	log.Warnf(format, args...)
+}
+
+func errorf(format string, args ...any) {
+	log.Errorf(format, args...)
 }

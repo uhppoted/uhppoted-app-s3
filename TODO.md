@@ -3,6 +3,10 @@
 ### IN PROGRESS
 
 - [x] Move default `git` branch to `main`
+- [x] Implement service lock
+      - [x] `load-acl` 
+      - [x] `store-acl`
+      - [ ] Remove FIXME when Go package repository has been updated
 
 ## TODO
 

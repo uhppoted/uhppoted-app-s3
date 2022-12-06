@@ -8,16 +8,19 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/uhppoted/uhppote-core/uhppote"
 	"github.com/uhppoted/uhppoted-lib/acl"
 	"github.com/uhppoted/uhppoted-lib/config"
 	"github.com/uhppoted/uhppoted-lib/eventlog"
+	"github.com/uhppoted/uhppoted-lib/lockfile"
 )
 
 var StoreACLCmd = StoreACL{
 	config:      config.DefaultConfig,
+	workdir:     DEFAULT_WORKDIR,
 	keyfile:     DEFAULT_KEYFILE,
 	credentials: DEFAULT_CREDENTIALS,
 	profile:     DEFAULT_PROFILE,
@@ -31,6 +34,7 @@ var StoreACLCmd = StoreACL{
 type StoreACL struct {
 	url         string
 	config      string
+	workdir     string
 	keyfile     string
 	credentials string
 	profile     string
@@ -56,6 +60,7 @@ func (cmd *StoreACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&cmd.keyfile, "key", cmd.keyfile, "RSA signing key")
 	flagset.BoolVar(&cmd.nosign, "no-sign", cmd.nosign, "Does not sign the generated report")
 	flagset.BoolVar(&cmd.nolog, "no-log", cmd.nolog, "Writes log messages to stdout rather than a rotatable log file")
+	flagset.StringVar(&cmd.workdir, "workdir", cmd.workdir, "Sets the working directory for temporary files, etc")
 
 	return flagset
 }
@@ -115,6 +120,21 @@ func (cmd *StoreACL) Execute(args ...interface{}) error {
 		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
 	} else {
 		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
+	}
+
+	// ... locked?
+	lockFile := config.Lockfile{
+		File:   filepath.Join(cmd.workdir, "uhppoted-app-s3.lock"),
+		Remove: false, // FIXME use lockfile.RemoveLockfile when Go package repository has updated
+	}
+
+	if kraken, err := lockfile.MakeLockFile(lockFile); err != nil {
+		return err
+	} else {
+		defer func() {
+			infof("Removing lockfile '%v'", lockFile.File)
+			kraken.Release()
+		}()
 	}
 
 	return cmd.execute(u, uri.String(), devices, logger)
