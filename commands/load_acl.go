@@ -155,7 +155,7 @@ func (cmd *LoadACL) Execute(args ...interface{}) error {
 	// ... locked?
 	lockFile := config.Lockfile{
 		File:   filepath.Join(cmd.workdir, "uhppoted-app-s3.lock"),
-		Remove: false, // FIXME use lockfile.RemoveLockfile when Go package repository has updated
+		Remove: lockfile.RemoveLockfile,
 	}
 
 	if kraken, err := lockfile.MakeLockFile(lockFile); err != nil {
