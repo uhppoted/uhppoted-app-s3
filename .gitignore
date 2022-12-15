@@ -2,3 +2,4 @@
 .Makefile
 bin
 dist
+release-notes.md

@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## [Unreleased]
+## [0.8.3](https://github.com/uhppoted/uhppoted-app-s3/releases/tag/v0.8.3) - 2022-13-16
 
 ### Added
 1. Implemented service lock for `load-acl` and `store-acl` commands.
