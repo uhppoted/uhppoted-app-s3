@@ -81,6 +81,9 @@ debug: build
 	       --credentials "../runtime/.credentials.test" \
 	       --url "s3://uhppoted-test/simulation/QWERTY54.tar.gz" \
 
+godoc:
+	godoc -http=:80	-index_interval=60s
+
 usage: build
 	$(CMD)
 
