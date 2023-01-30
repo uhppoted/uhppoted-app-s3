@@ -14,6 +14,5 @@ uhppoted-app-s3 supports the following commands:
   - load-acl, to download an ACL from a file to a set of access controllers
   - store-acl, to retrieve the ACL from a set of controllers and save it as a file
   - compare-acl, to compare an ACL from a file with the cards and permissons on a set of access controllers
-
 */
 package s3
