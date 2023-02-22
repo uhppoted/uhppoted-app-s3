@@ -2,4 +2,6 @@
 .Makefile
 bin
 dist
+go.work
+go.work.sum
 release-notes.md

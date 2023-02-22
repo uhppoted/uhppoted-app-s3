@@ -66,7 +66,7 @@ func (cmd *StoreACL) FlagSet() *flag.FlagSet {
 }
 
 func (cmd *StoreACL) Description() string {
-	return fmt.Sprintf("Retrieves the ACL from the configured controllers and uploads to S3")
+	return "Retrieves the ACL from the configured controllers and uploads to S3"
 }
 
 func (cmd *StoreACL) Usage() string {
@@ -92,7 +92,7 @@ func (cmd *StoreACL) Execute(args ...interface{}) error {
 
 	uri, err := url.Parse(cmd.url)
 	if err != nil {
-		return fmt.Errorf("Invalid upload URL '%s' (%w)", cmd.url, err)
+		return fmt.Errorf("invalid upload URL '%s' (%w)", cmd.url, err)
 	}
 
 	conf := config.NewConfig()

@@ -8,7 +8,7 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 )
 
@@ -17,7 +17,7 @@ func Sign(acl []byte, keyfile string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	} else if key == nil {
-		return nil, fmt.Errorf("Invalid RSA signing key")
+		return nil, fmt.Errorf("invalid RSA signing key")
 	}
 
 	rng := rand.Reader
@@ -44,7 +44,7 @@ func Verify(signedBy string, acl []byte, signature []byte, dir string) error {
 }
 
 func loadPrivateKey(filepath string) (*rsa.PrivateKey, error) {
-	bytes, err := ioutil.ReadFile(filepath)
+	bytes, err := os.ReadFile(filepath)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func loadPrivateKey(filepath string) (*rsa.PrivateKey, error) {
 
 func loadPublicKey(dir, id string) (*rsa.PublicKey, error) {
 	file := filepath.Join(dir, id+".pub")
-	bytes, err := ioutil.ReadFile(file)
+	bytes, err := os.ReadFile(file)
 	if err != nil {
 		return nil, err
 	}

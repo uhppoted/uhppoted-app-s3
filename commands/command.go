@@ -33,18 +33,18 @@ func helpOptions(flagset *flag.FlagSet) {
 	}
 }
 
-func debugf(format string, args ...any) {
-	log.Debugf(format, args...)
-}
+// func debugf(format string, args ...any) {
+// 	log.Debugf(format, args...)
+// }
 
 func infof(format string, args ...any) {
 	log.Infof(format, args...)
 }
 
-func warnf(format string, args ...any) {
-	log.Warnf(format, args...)
-}
+// func warnf(format string, args ...any) {
+// 	log.Warnf(format, args...)
+// }
 
-func errorf(format string, args ...any) {
-	log.Errorf(format, args...)
-}
+// func errorf(format string, args ...any) {
+// 	log.Errorf(format, args...)
+// }

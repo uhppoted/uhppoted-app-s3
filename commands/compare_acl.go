@@ -79,7 +79,7 @@ func (cmd *CompareACL) FlagSet() *flag.FlagSet {
 }
 
 func (cmd *CompareACL) Description() string {
-	return fmt.Sprintf("Retrieves the ACL from the configured controllers, compares it to the authoritative ACL at the provided URL and uploads the report to S3")
+	return "Retrieves the ACL from the configured controllers, compares it to the authoritative ACL at the provided URL and uploads the report to S3"
 }
 
 func (cmd *CompareACL) Usage() string {
@@ -115,7 +115,7 @@ func (cmd *CompareACL) Execute(args ...interface{}) error {
 
 	uri, err := url.Parse(cmd.acl)
 	if err != nil {
-		return fmt.Errorf("Invalid ACL file URL '%s' (%w)", cmd.acl, err)
+		return fmt.Errorf("invalid ACL file URL '%s' (%w)", cmd.acl, err)
 	}
 
 	conf := config.NewConfig()

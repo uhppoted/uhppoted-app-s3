@@ -89,7 +89,7 @@ func (cmd *LoadACL) FlagSet() *flag.FlagSet {
 }
 
 func (cmd *LoadACL) Description() string {
-	return fmt.Sprintf("Fetches an access control list from S3 and loads it to the configured controllers")
+	return "Fetches an access control list from S3 and loads it to the configured controllers"
 }
 
 func (cmd *LoadACL) Usage() string {
@@ -122,7 +122,7 @@ func (cmd *LoadACL) Execute(args ...interface{}) error {
 
 	uri, err := url.Parse(cmd.url)
 	if err != nil {
-		return fmt.Errorf("Invalid ACL file URL '%s' (%w)", cmd.url, err)
+		return fmt.Errorf("invalid ACL file URL '%s' (%w)", cmd.url, err)
 	}
 
 	conf := config.NewConfig()
