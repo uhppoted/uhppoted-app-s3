@@ -27,6 +27,7 @@ var StoreACLCmd = StoreACL{
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
+	withPIN:     false,
 	nolog:       false,
 	debug:       false,
 }
@@ -41,6 +42,7 @@ type StoreACL struct {
 	region      string
 	logFile     string
 	logFileSize int
+	withPIN     bool
 	nosign      bool
 	nolog       bool
 	debug       bool
@@ -60,6 +62,7 @@ func (cmd *StoreACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&cmd.keyfile, "key", cmd.keyfile, "RSA signing key")
 	flagset.BoolVar(&cmd.nosign, "no-sign", cmd.nosign, "Does not sign the generated report")
 	flagset.BoolVar(&cmd.nolog, "no-log", cmd.nolog, "Writes log messages to stdout rather than a rotatable log file")
+	flagset.BoolVar(&cmd.withPIN, "with-pin", cmd.withPIN, "Includes the card keypad PIN codes in the retrieved ACL file")
 	flagset.StringVar(&cmd.workdir, "workdir", cmd.workdir, "Sets the working directory for temporary files, etc")
 
 	return flagset
@@ -152,14 +155,24 @@ func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.D
 		log.Printf("%v  Retrieved %v records", k, len(l))
 	}
 
-	var files = map[string][]byte{}
 	var w strings.Builder
-	if err := acl.MakeTSV(list, devices, &w); err != nil {
+
+	makeTSV := func() error {
+		if cmd.withPIN {
+			return acl.MakeTSVWithPIN(list, devices, &w)
+		} else {
+			return acl.MakeTSV(list, devices, &w)
+		}
+	}
+
+	if err := makeTSV(); err != nil {
 		return err
 	}
 
 	tsv := []byte(w.String())
-	files["uhppoted.acl"] = tsv
+	files := map[string][]byte{
+		"uhppoted.acl": tsv,
+	}
 
 	if !cmd.nosign {
 		signature, err := sign(tsv, cmd.keyfile)

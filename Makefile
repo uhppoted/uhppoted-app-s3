@@ -119,6 +119,9 @@ store-acl-s3: build
 store-acl-file: build
 	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.tar.gz"
 
+store-acl-file-with-pin: build
+	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.tar.gz" --with-pin
+
 store-acl-zip: build
 	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.zip"
 
