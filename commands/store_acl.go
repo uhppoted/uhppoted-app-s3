@@ -25,9 +25,9 @@ var StoreACLCmd = StoreACL{
 	credentials: DEFAULT_CREDENTIALS,
 	profile:     DEFAULT_PROFILE,
 	region:      DEFAULT_REGION,
+	withPIN:     false,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
-	withPIN:     false,
 	nolog:       false,
 	debug:       false,
 }
@@ -40,9 +40,9 @@ type StoreACL struct {
 	credentials string
 	profile     string
 	region      string
+	withPIN     bool
 	logFile     string
 	logFileSize int
-	withPIN     bool
 	nosign      bool
 	nolog       bool
 	debug       bool

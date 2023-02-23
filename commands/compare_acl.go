@@ -24,6 +24,7 @@ var CompareACLCmd = CompareACL{
 	credentials: DEFAULT_CREDENTIALS,
 	profile:     DEFAULT_PROFILE,
 	region:      DEFAULT_REGION,
+	withPIN:     false,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
 	noverify:    false,
@@ -50,6 +51,7 @@ type CompareACL struct {
 	credentials string
 	profile     string
 	region      string
+	withPIN     bool
 	logFile     string
 	logFileSize int
 	template    string
@@ -70,6 +72,7 @@ func (cmd *CompareACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&cmd.credentials, "credentials", cmd.credentials, "AWS credentials file")
 	flagset.StringVar(&cmd.profile, "profile", cmd.profile, "AWS credentials file profile (defaults to 'default')")
 	flagset.StringVar(&cmd.region, "region", cmd.region, "AWS region for S3 (defaults to us-east-1)")
+	flagset.BoolVar(&cmd.withPIN, "with-pin", cmd.withPIN, "Includes the card keypad PIN codes in the ACL comparison")
 	flagset.StringVar(&cmd.keysdir, "keys", cmd.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.StringVar(&cmd.keyfile, "key", cmd.keyfile, "RSA signing key")
 	flagset.BoolVar(&cmd.noverify, "no-verify", cmd.noverify, "Disables verification of the downloaded ACL RSA signature")
@@ -211,20 +214,23 @@ func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote
 		return fmt.Errorf("%v", errors)
 	}
 
-	diff, err := acl.Compare(current, list)
-	if err != nil {
+	compare := func(current acl.ACL, list acl.ACL) (map[uint32]acl.Diff, error) {
+		if cmd.withPIN {
+			return acl.CompareWithPIN(current, list)
+		} else {
+			return acl.Compare(current, list)
+		}
+	}
+
+	if diff, err := compare(current, list); err != nil {
 		return err
-	}
+	} else {
+		for k, v := range diff {
+			log.Printf("%v  SUMMARY  same:%v  different:%v  missing:%v  extraneous:%v", k, len(v.Unchanged), len(v.Updated), len(v.Added), len(v.Deleted))
+		}
 
-	for k, v := range diff {
-		log.Printf("%v  SUMMARY  same:%v  different:%v  missing:%v  extraneous:%v", k, len(v.Unchanged), len(v.Updated), len(v.Added), len(v.Deleted))
+		return cmd.upload(diff, log)
 	}
-
-	if err := cmd.upload(diff, log); err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func (cmd *CompareACL) fetchHTTP(url string) ([]byte, error) {

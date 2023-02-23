@@ -120,7 +120,7 @@ store-acl-file: build
 	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.tar.gz"
 
 store-acl-file-with-pin: build
-	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.tar.gz" --with-pin
+	$(CMD) store-acl --with-pin --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.tar.gz"
 
 store-acl-zip: build
 	$(CMD) store-acl --no-log --key ../runtime/acl/uhppoted --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/uhppoted.zip"
@@ -146,6 +146,14 @@ compare-acl-file: build
 	       --keys        ../runtime/s3/keys                     \
 	       --key         ../runtime/acl/uhppoted                \
 	       --acl         "file://../runtime/s3/hogwarts.tar.gz" \
+	       --report      "file://../runtime/s3/report.tar.gz"
+
+compare-acl-file-with-pin: build
+	$(CMD) compare-acl --with-pin \
+	       --credentials "../runtime/.credentials.test" \
+	       --keys        ../runtime/s3/keys             \
+	       --key         ../runtime/acl/uhppoted        \
+	       --acl         "file://../runtime/s3/hogwarts-with-pin.tar.gz" \
 	       --report      "file://../runtime/s3/report.tar.gz"
 
 compare-acl-zip: build
