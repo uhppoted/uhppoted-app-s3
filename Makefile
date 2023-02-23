@@ -105,7 +105,7 @@ load-acl-s3: build
 	$(CMD) load-acl --strict --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/QWERTY54.tar.gz"
 
 load-acl-file: build
-	$(CMD) load-acl --keys ../runtime/s3/keys --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/hogwarts.tar.gz"
+	$(CMD) load-acl --no-log --keys ../runtime/s3/keys --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/hogwarts.tar.gz"
 
 load-acl-zip: build
 	$(CMD) load-acl --no-log --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/QWERTY54.zip"
@@ -142,6 +142,7 @@ compare-acl-s3: build
 
 compare-acl-file: build
 	$(CMD) compare-acl \
+           --no-log    \
 	       --credentials "../runtime/.credentials.test"         \
 	       --keys        ../runtime/s3/keys                     \
 	       --key         ../runtime/acl/uhppoted                \

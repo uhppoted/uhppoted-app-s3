@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
+	syslog "log"
 	"net/url"
 	"os"
 	"strings"
@@ -15,6 +15,8 @@ import (
 	"github.com/uhppoted/uhppoted-lib/acl"
 	"github.com/uhppoted/uhppoted-lib/config"
 	"github.com/uhppoted/uhppoted-lib/eventlog"
+
+	"github.com/uhppoted/uhppoted-app-s3/log"
 )
 
 var CompareACLCmd = CompareACL{
@@ -140,19 +142,18 @@ func (cmd *CompareACL) Execute(args ...interface{}) error {
 
 	u, devices := getDevices(conf, cmd.debug)
 
-	var logger *log.Logger
 	if !cmd.nolog {
 		events := eventlog.Ticker{Filename: cmd.logFile, MaxSize: cmd.logFileSize}
-		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
+		log.SetLogger(syslog.New(&events, "", syslog.Ldate|syslog.Ltime|syslog.LUTC))
 	} else {
-		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
+		log.SetLogger(syslog.New(os.Stdout, "ACL ", syslog.LstdFlags|syslog.LUTC|syslog.Lmsgprefix))
 	}
 
-	return cmd.execute(u, uri.String(), devices, logger)
+	return cmd.execute(u, uri.String(), devices)
 }
 
-func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device, log *log.Logger) error {
-	log.Printf("Fetching ACL from %v", uri)
+func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device) error {
+	log.Infof("Fetching ACL from %v", uri)
 
 	f := cmd.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
@@ -166,7 +167,7 @@ func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote
 		return err
 	}
 
-	log.Printf("Fetched ACL from %v (%d bytes)", uri, len(b))
+	log.Infof("Fetched ACL from %v (%d bytes)", uri, len(b))
 
 	x := untar
 	if strings.HasSuffix(uri, ".zip") {
@@ -188,7 +189,7 @@ func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote
 		return fmt.Errorf("'signature' file missing from tar.gz")
 	}
 
-	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
+	log.Infof("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
 	if !cmd.noverify {
 		if err := verify(uname, tsv, signature, cmd.keysdir); err != nil {
@@ -202,11 +203,11 @@ func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote
 	}
 
 	for _, w := range warnings {
-		log.Printf("WARN  %v", w)
+		log.Warnf("%v", w)
 	}
 
 	for k, l := range list {
-		log.Printf("%v  Retrieved %v records", k, len(l))
+		log.Infof("%v  Retrieved %v records", k, len(l))
 	}
 
 	current, errors := acl.GetACL(u, devices)
@@ -226,10 +227,10 @@ func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote
 		return err
 	} else {
 		for k, v := range diff {
-			log.Printf("%v  SUMMARY  same:%v  different:%v  missing:%v  extraneous:%v", k, len(v.Unchanged), len(v.Updated), len(v.Added), len(v.Deleted))
+			log.Infof("%v  SUMMARY  same:%v  different:%v  missing:%v  extraneous:%v", k, len(v.Unchanged), len(v.Updated), len(v.Added), len(v.Deleted))
 		}
 
-		return cmd.upload(diff, log)
+		return cmd.upload(diff)
 	}
 }
 
@@ -257,8 +258,8 @@ func (cmd *CompareACL) storeFile(url string, r io.Reader) error {
 	return storeFile(url, r)
 }
 
-func (cmd *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
-	log.Printf("Uploading ACL 'diff' report")
+func (cmd *CompareACL) upload(diff map[uint32]acl.Diff) error {
+	log.Infof("Uploading ACL 'diff' report")
 
 	var w strings.Builder
 
@@ -288,7 +289,7 @@ func (cmd *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 		return err
 	}
 
-	log.Printf("tar'd report (%v bytes) and signature (%v bytes): %v bytes", len(rpt), len(signature), b.Len())
+	log.Infof("tar'd report (%v bytes) and signature (%v bytes): %v bytes", len(rpt), len(signature), b.Len())
 
 	f := cmd.storeHTTP
 	if strings.HasPrefix(cmd.rpt, "s3://") {
@@ -301,7 +302,7 @@ func (cmd *CompareACL) upload(diff map[uint32]acl.Diff, log *log.Logger) error {
 		return err
 	}
 
-	log.Printf("Uploaded to %v", cmd.rpt)
+	log.Infof("Uploaded to %v", cmd.rpt)
 
 	return nil
 }

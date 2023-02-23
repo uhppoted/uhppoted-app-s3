@@ -16,6 +16,8 @@ import (
 	"github.com/uhppoted/uhppoted-lib/config"
 	"github.com/uhppoted/uhppoted-lib/eventlog"
 	"github.com/uhppoted/uhppoted-lib/lockfile"
+
+	"github.com/uhppoted/uhppoted-app-s3/log"
 )
 
 var LoadACLCmd = LoadACL{
@@ -144,12 +146,11 @@ func (cmd *LoadACL) Execute(args ...interface{}) error {
 
 	u, devices := getDevices(conf, cmd.debug)
 
-	var logger *syslog.Logger
 	if !cmd.nolog {
 		events := eventlog.Ticker{Filename: cmd.logFile, MaxSize: cmd.logFileSize}
-		logger = syslog.New(&events, "", syslog.Ldate|syslog.Ltime|syslog.LUTC)
+		log.SetLogger(syslog.New(&events, "", syslog.Ldate|syslog.Ltime|syslog.LUTC))
 	} else {
-		logger = syslog.New(os.Stdout, "ACL ", syslog.LstdFlags|syslog.LUTC|syslog.Lmsgprefix)
+		log.SetLogger(syslog.New(os.Stdout, "ACL ", syslog.LstdFlags|syslog.LUTC|syslog.Lmsgprefix))
 	}
 
 	// ... locked?
@@ -167,11 +168,11 @@ func (cmd *LoadACL) Execute(args ...interface{}) error {
 		}()
 	}
 
-	return cmd.execute(u, uri.String(), devices, logger)
+	return cmd.execute(u, uri.String(), devices)
 }
 
-func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device, log *syslog.Logger) error {
-	log.Printf("Fetching ACL from %v", uri)
+func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device) error {
+	log.Infof("Fetching ACL from %v", uri)
 
 	f := cmd.fetchHTTP
 	if strings.HasPrefix(uri, "s3://") {
@@ -185,7 +186,7 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 		return err
 	}
 
-	log.Printf("Fetched ACL from %v (%d bytes)", uri, len(b))
+	log.Infof("Fetched ACL from %v (%d bytes)", uri, len(b))
 
 	x := untar
 	if strings.HasSuffix(uri, ".zip") {
@@ -207,7 +208,7 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 		return fmt.Errorf("'signature' file missing from tar.gz")
 	}
 
-	log.Printf("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
+	log.Infof("Extracted ACL from %v: %v bytes, signature: %v bytes", uri, len(tsv), len(signature))
 
 	if !cmd.noverify {
 		if err := verify(uname, tsv, signature, cmd.keysdir); err != nil {
@@ -221,11 +222,11 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 	}
 
 	for _, w := range warnings {
-		log.Printf("WARN  %v", w)
+		log.Warnf("%v", w)
 	}
 
 	for k, l := range list {
-		log.Printf("%v  Retrieved %v records", k, len(l))
+		log.Infof("%v  Retrieved %v records", k, len(l))
 	}
 
 	if !cmd.noreport {
@@ -234,12 +235,12 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 			return fmt.Errorf("%v", errors)
 		}
 
-		cmd.report(current, list, log)
+		cmd.report(current, list)
 	}
 
 	rpt, errors := acl.PutACL(u, list, cmd.dryrun)
 	for k, v := range rpt {
-		log.Printf("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
+		log.Infof("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
 			k,
 			len(v.Unchanged),
 			len(v.Updated),
@@ -268,8 +269,8 @@ func (cmd *LoadACL) fetchFile(url string) ([]byte, error) {
 	return fetchFile(url)
 }
 
-func (cmd *LoadACL) report(current, list acl.ACL, log *syslog.Logger) error {
-	log.Printf("Generating ACL 'diff' report")
+func (cmd *LoadACL) report(current, list acl.ACL) error {
+	log.Infof("Generating ACL 'diff' report")
 
 	diff, err := acl.Compare(current, list)
 	if err != nil {
@@ -287,7 +288,7 @@ func (cmd *LoadACL) report(current, list acl.ACL, log *syslog.Logger) error {
 
 	defer f.Close()
 
-	log.Printf("Writing 'diff' report to %v", f.Name())
+	log.Infof("Writing 'diff' report to %v", f.Name())
 
 	return report(diff, cmd.template, f)
 }

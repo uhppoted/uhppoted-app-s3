@@ -5,7 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"log"
+	syslog "log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -16,6 +16,8 @@ import (
 	"github.com/uhppoted/uhppoted-lib/config"
 	"github.com/uhppoted/uhppoted-lib/eventlog"
 	"github.com/uhppoted/uhppoted-lib/lockfile"
+
+	"github.com/uhppoted/uhppoted-app-s3/log"
 )
 
 var StoreACLCmd = StoreACL{
@@ -84,11 +86,11 @@ func (cmd *StoreACL) Help() {
 	fmt.Println()
 
 	helpOptions(cmd.FlagSet())
+
 	fmt.Println()
 }
 
 func (cmd *StoreACL) Execute(args ...interface{}) error {
-	//	ctx := args[0].(context.Context)
 	if strings.TrimSpace(cmd.url) == "" {
 		return fmt.Errorf("store-acl requires a pre-signed S3 URL in the command options")
 	}
@@ -117,12 +119,11 @@ func (cmd *StoreACL) Execute(args ...interface{}) error {
 
 	u, devices := getDevices(conf, cmd.debug)
 
-	var logger *log.Logger
 	if !cmd.nolog {
 		events := eventlog.Ticker{Filename: cmd.logFile, MaxSize: cmd.logFileSize}
-		logger = log.New(&events, "", log.Ldate|log.Ltime|log.LUTC)
+		log.SetLogger(syslog.New(&events, "", syslog.Ldate|syslog.Ltime|syslog.LUTC))
 	} else {
-		logger = log.New(os.Stdout, "ACL ", log.LstdFlags|log.LUTC|log.Lmsgprefix)
+		log.SetLogger(syslog.New(os.Stdout, "ACL ", syslog.LstdFlags|syslog.LUTC|syslog.Lmsgprefix))
 	}
 
 	// ... locked?
@@ -140,11 +141,11 @@ func (cmd *StoreACL) Execute(args ...interface{}) error {
 		}()
 	}
 
-	return cmd.execute(u, uri.String(), devices, logger)
+	return cmd.execute(u, uri.String(), devices)
 }
 
-func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device, log *log.Logger) error {
-	log.Printf("Storing ACL to %v", uri)
+func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.Device) error {
+	log.Infof("Storing ACL to %v", uri)
 
 	list, errors := acl.GetACL(u, devices)
 	if len(errors) > 0 {
@@ -152,7 +153,7 @@ func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.D
 	}
 
 	for k, l := range list {
-		log.Printf("%v  Retrieved %v records", k, len(l))
+		log.Infof("%v  Retrieved %v records", k, len(l))
 	}
 
 	var w strings.Builder
@@ -192,7 +193,7 @@ func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.D
 		return err
 	}
 
-	log.Printf("tar'd ACL (%v bytes) and signature (%v bytes): %v bytes", len(files["uhppoted.acl"]), len(files["signature"]), b.Len())
+	log.Infof("tar'd ACL (%v bytes) and signature (%v bytes): %v bytes", len(files["uhppoted.acl"]), len(files["signature"]), b.Len())
 
 	f := cmd.storeHTTP
 	if strings.HasPrefix(uri, "s3://") {
@@ -205,7 +206,7 @@ func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.D
 		return err
 	}
 
-	log.Printf("Stored ACL to %v", uri)
+	log.Infof("Stored ACL to %v", uri)
 
 	return nil
 }
