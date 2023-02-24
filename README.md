@@ -146,6 +146,7 @@ The only currently supported ACL file format is TSV (tab separated values) and i
 | `<door>`      | Door name matching controller configuration (_case and space insensitive_) |
 | `<door>`      | ...                                                                        |
 | ...           |                                                                            |
+| `PIN`         | Keypad PIN code (optional)                                                 |
 
 The ACL file must include a column for each controller + door configured in the _devices_ section of the `uhppoted.conf` file used to configure the utility.
 
@@ -177,7 +178,7 @@ Command line:
 
 ```uhppoted-app-s3 load-acl --url <url>```
 
-```uhppoted-app-s3 load-acl [--debug]  [--no-log] [--no-report] [--no-verify] [--config <file>] [--workdir <dir>] [--keys <dir>] [--credentials <file>] [--region <region>] --url <url>```
+```uhppoted-app-s3 load-acl [--debug]  [--with-pin] [--no-log] [--no-report] [--no-verify] [--config <file>] [--workdir <dir>] [--keys <dir>] [--credentials <file>] [--region <region>] --url <url>```
 
 ```
   --url         URL from which to fetch the ACL files. A URL starting with s3:// specifies 
@@ -190,6 +191,7 @@ Command line:
   --keys        Directory containing the public keys for RSA keys used to sign the ACL's
   --config      Sets the uhppoted.conf file to use for controller configurations
   --workdir     Sets the working directory for generated report files
+  --with-pin    Updates the card keypad PIN code
   --no-log      Writes log messages to the console rather than the rotating log file
   --no-report   Prints the load-acl operational report to the console rather than creating a report file
   --no-verify   Disables verification of the ACL file signature
@@ -211,7 +213,7 @@ Command line:
 
 ```uhppoted-app-s3 store-acl --url <url>```
 
-```uhppoted-app-s3 store-acl [--debug]  [--no-log] [--no-sign] [--config <file>] [--key <RSA signing key>] [--credentials <file>] [--region <region>] --url <url>```
+```uhppoted-app-s3 store-acl [--debug] [--with-pin] [--no-log] [--no-sign] [--config <file>] [--key <RSA signing key>] [--credentials <file>] [--region <region>] --url <url>```
 
 ```
   --url         URL to which to store the ACL file. A URL starting with s3:// specifies 
@@ -225,6 +227,7 @@ Command line:
   --region      AWS S3 region (e.g. us-east-1) for use with the AWS credentials
   --key         File containing the private RSA key used to sign the ACL
   --config      Sets the uhppoted.conf file to use for controller configurations
+  --with-pin    Includes the card keypad PIN code in the retrieved ACL
   --no-sign     Does not sign the generated ACL file with the uhppoted RSA signing key
   --no-log      Writes log messages to the console rather than the rotating log file
   --debug       Displays verbose debugging information, in particular the communications with the UHPPOTE controllers
@@ -254,7 +257,7 @@ Command line:
 
 ```uhppoted-app-s3 compare-acl --acl <url> --report <url>```
 
-```uhppoted-app-s3 compare-acl [--debug]  [--no-log] [--no-verify] [--config <file>] [--keys <dir>] [--key <file>] [--credentials <file>] [--region <region>] --acl <url> --report <url>```
+```uhppoted-app-s3 compare-acl [--debug] [-with-pin] [--no-log] [--no-verify] [--config <file>] [--keys <dir>] [--key <file>] [--credentials <file>] [--region <region>] --acl <url> --report <url>```
 
 ```
   --acl         URL from which to fetch the ACL files. A URL starting with s3:// specifies 
@@ -272,6 +275,7 @@ Command line:
   --keys        Directory containing the public keys for RSA keys used to sign the ACL's
   --key         File containing the private RSA key used to sign the report
   --config      Sets the uhppoted.conf file to use for controller configurations
+  --with-pin    Includes the card keypad PIN code when comparing cards
   --no-verify   Disables verification of the ACL file signature
   --no-log      Writes log messages to the console rather than the rotating log file
   --debug       Displays verbose debugging information, in particular the communications with the UHPPOTE controllers

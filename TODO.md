@@ -1,6 +1,7 @@
 # TODO
 
 - [x] Added doc.go overview file
+- [x] Added card keypad PIN code support (cf. https://github.com/uhppoted/uhppote-core/issues/8)
 
 ## TODO
 
