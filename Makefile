@@ -107,6 +107,9 @@ load-acl-s3: build
 load-acl-file: build
 	$(CMD) load-acl --no-log --keys ../runtime/s3/keys --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/hogwarts.tar.gz"
 
+load-acl-file-with-pin: build
+	$(CMD) load-acl --with-pin --no-log --keys ../runtime/s3/keys --credentials "../runtime/.credentials.test" --url "file://../runtime/s3/hogwarts-with-pin.tar.gz"
+
 load-acl-zip: build
 	$(CMD) load-acl --no-log --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "file://../runtime/simulation/QWERTY54.zip"
 

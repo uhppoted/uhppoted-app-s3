@@ -29,6 +29,7 @@ var LoadACLCmd = LoadACL{
 	region:      DEFAULT_REGION,
 	logFile:     DEFAULT_LOGFILE,
 	logFileSize: DEFAULT_LOGFILESIZE,
+	withPIN:     false,
 	dryrun:      false,
 	strict:      false,
 	noreport:    false,
@@ -60,6 +61,7 @@ type LoadACL struct {
 	logFile     string
 	logFileSize int
 	template    string
+	withPIN     bool
 	dryrun      bool
 	strict      bool
 	noreport    bool
@@ -81,6 +83,7 @@ func (cmd *LoadACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&cmd.region, "region", cmd.region, "AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&cmd.keysdir, "keys", cmd.keysdir, "Sets the directory to search for RSA signing keys. Key files are expected to be named '<uname>.pub'")
 	flagset.StringVar(&cmd.workdir, "workdir", cmd.workdir, "Sets the working directory for temporary files, etc")
+	flagset.BoolVar(&cmd.withPIN, "with-pin", cmd.withPIN, "Includes the card keypad PIN codes when updating the controllers")
 	flagset.BoolVar(&cmd.noverify, "no-verify", cmd.noverify, "Disables verification of the downloaded ACL RSA signature")
 	flagset.BoolVar(&cmd.dryrun, "dry-run", cmd.dryrun, "Simulates a load-acl without making any changes to the access controllers")
 	flagset.BoolVar(&cmd.strict, "strict", cmd.strict, "Fails the load if the ACL contains duplicate card numbers")
@@ -238,7 +241,15 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 		cmd.report(current, list)
 	}
 
-	rpt, errors := acl.PutACL(u, list, cmd.dryrun)
+	put := func(u uhppote.IUHPPOTE, list acl.ACL, dryrun bool) (map[uint32]acl.Report, []error) {
+		if cmd.withPIN {
+			return acl.PutACLWithPIN(u, list, dryrun)
+		} else {
+			return acl.PutACL(u, list, cmd.dryrun)
+		}
+	}
+
+	rpt, errors := put(u, list, cmd.dryrun)
 	for k, v := range rpt {
 		log.Infof("%v  SUMMARY  unchanged:%v  updated:%v  added:%v  deleted:%v  failed:%v  errors:%v",
 			k,
