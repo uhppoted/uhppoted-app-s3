@@ -4,10 +4,10 @@
 
 ### Added
 1. `doc.go` package overview documentation.
-2. Added `--with-pin` option for card keypad PIN to load, store and compare commands
+2. Added `--with-pin` option for card keypad PIN to `load`, `store` and `compare` commands
 
 ### Updated
-1. Fixed initial round of _staticcheck_ lint errors and permanently added _staticcheck_ to
+1. Fixed initial round of _staticcheck_ lint errors and added _staticcheck_ to
    CI build.
 
 

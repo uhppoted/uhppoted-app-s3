@@ -62,9 +62,9 @@ func (cmd *StoreACL) FlagSet() *flag.FlagSet {
 	flagset.StringVar(&cmd.profile, "profile", cmd.profile, "AWS credentials file profile (defaults to 'default')")
 	flagset.StringVar(&cmd.region, "region", cmd.region, "AWS region for S3 (defaults to us-east-1)")
 	flagset.StringVar(&cmd.keyfile, "key", cmd.keyfile, "RSA signing key")
+	flagset.BoolVar(&cmd.withPIN, "with-pin", cmd.withPIN, "Includes the card keypad PIN codes in the retrieved ACL file")
 	flagset.BoolVar(&cmd.nosign, "no-sign", cmd.nosign, "Does not sign the generated report")
 	flagset.BoolVar(&cmd.nolog, "no-log", cmd.nolog, "Writes log messages to stdout rather than a rotatable log file")
-	flagset.BoolVar(&cmd.withPIN, "with-pin", cmd.withPIN, "Includes the card keypad PIN codes in the retrieved ACL file")
 	flagset.StringVar(&cmd.workdir, "workdir", cmd.workdir, "Sets the working directory for temporary files, etc")
 
 	return flagset
