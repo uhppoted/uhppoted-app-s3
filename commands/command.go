@@ -33,18 +33,21 @@ func helpOptions(flagset *flag.FlagSet) {
 	}
 }
 
-// func debugf(format string, args ...any) {
-// 	log.Debugf(format, args...)
-// }
+//lint:ignore U1000 utility function
+func debugf(format string, args ...any) {
+	log.Debugf(format, args...)
+}
 
 func infof(format string, args ...any) {
 	log.Infof(format, args...)
 }
 
-// func warnf(format string, args ...any) {
-// 	log.Warnf(format, args...)
-// }
+//lint:ignore U1000 utility function
+func warnf(format string, args ...any) {
+	log.Warnf(format, args...)
+}
 
-// func errorf(format string, args ...any) {
-// 	log.Errorf(format, args...)
-// }
+//lint:ignore U1000 utility function
+func errorf(format string, args ...any) {
+	log.Errorf(format, args...)
+}
