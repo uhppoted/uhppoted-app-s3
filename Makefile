@@ -17,9 +17,6 @@ clean:
 update:
 	go get -u github.com/uhppoted/uhppote-core@master
 	go get -u github.com/uhppoted/uhppoted-lib@master
-	go get -u github.com/aws/aws-sdk-go
-	go get -u golang.org/x/sys
-	go get -u golang.org/x/crypto
 	go mod tidy
 
 update-release:
