@@ -15,9 +15,10 @@ Supported operating systems:
 
 ### Current Release
 
-**[v0.8.7](https://github.com/uhppoted/uhppoted-app-s3/releases/tag/v0.8.7) - 2023-12-01**
+**[v0.8.8](https://github.com/uhppoted/uhppoted-app-s3/releases/tag/v0.8.8) - 2024-03-27**
 
-1. Maintenance release for compatibility with [uhppoted-lib](https://github.com/uhppoted/uhppoted-lib) v0.8.7
+1. Maintenance release for compatibility with [uhppoted-lib](https://github.com/uhppoted/uhppoted-lib) v0.8.8
+2. Bumped Go version to 1.22
 
 
 ## Installation
