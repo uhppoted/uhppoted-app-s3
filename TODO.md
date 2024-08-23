@@ -1,7 +1,8 @@
 # TODO
 
-- [x] Added doc.go overview file
-- [x] Added card keypad PIN code support (cf. https://github.com/uhppoted/uhppote-core/issues/8)
+- [x] TCP/IP protocol (cf. https://github.com/uhppoted/uhppote-core/issues/17)
+- [x] Update to Go 1.23 (cf. https://github.com/uhppoted/uhppoted/issues/53)
+
 
 ## TODO
 
