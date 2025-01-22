@@ -2,8 +2,6 @@
 
 ## Unreleased
 
-## Unreleased
-
 ### Added
 1. ARMv6 build target (for Pi ZeroW).
 
