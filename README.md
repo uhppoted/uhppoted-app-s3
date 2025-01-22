@@ -9,7 +9,7 @@ Supported operating systems:
 - Linux
 - MacOS
 - Windows
-- ARM7
+- RaspberryPi (ARM/ARM7/ARM6)
 
 ## Release Notes
 
