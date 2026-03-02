@@ -79,8 +79,8 @@ func fetchS3(url, config, profile, region string) ([]byte, error) {
 	bucket := match[1]
 	key := match[2]
 	object := s3.GetObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket: new(bucket),
+		Key:    new(key),
 	}
 
 	cfg := aws.NewConfig().
@@ -135,8 +135,8 @@ func storeS3(uri, config, profile, region string, r io.Reader) error {
 	key := match[2]
 
 	object := s3manager.UploadInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
+		Bucket: new(bucket),
+		Key:    new(key),
 		Body:   r,
 	}
 

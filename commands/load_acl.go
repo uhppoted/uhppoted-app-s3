@@ -114,7 +114,7 @@ func (cmd *LoadACL) Help() {
 	fmt.Println()
 }
 
-func (cmd *LoadACL) Execute(args ...interface{}) error {
+func (cmd *LoadACL) Execute(args ...any) error {
 	options := args[0].(*Options)
 
 	cmd.config = options.Config

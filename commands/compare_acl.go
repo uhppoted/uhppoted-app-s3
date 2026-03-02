@@ -103,7 +103,7 @@ func (cmd *CompareACL) Help() {
 	fmt.Println()
 }
 
-func (cmd *CompareACL) Execute(args ...interface{}) error {
+func (cmd *CompareACL) Execute(args ...any) error {
 	options := args[0].(*Options)
 
 	cmd.config = options.Config

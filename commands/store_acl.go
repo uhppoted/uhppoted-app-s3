@@ -90,7 +90,7 @@ func (cmd *StoreACL) Help() {
 	fmt.Println()
 }
 
-func (cmd *StoreACL) Execute(args ...interface{}) error {
+func (cmd *StoreACL) Execute(args ...any) error {
 	if strings.TrimSpace(cmd.url) == "" {
 		return fmt.Errorf("store-acl requires a pre-signed S3 URL in the command options")
 	}
