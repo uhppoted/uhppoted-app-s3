@@ -11,13 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-lib/acl"
-	"github.com/uhppoted/uhppoted-lib/config"
-	"github.com/uhppoted/uhppoted-lib/eventlog"
-	"github.com/uhppoted/uhppoted-lib/lockfile"
+	"codeberg.org/uhppoted/uhppoted-core/uhppote"
+	"codeberg.org/uhppoted/uhppoted-lib/acl"
+	"codeberg.org/uhppoted/uhppoted-lib/config"
+	"codeberg.org/uhppoted/uhppoted-lib/eventlog"
+	"codeberg.org/uhppoted/uhppoted-lib/lockfile"
 
-	"github.com/uhppoted/uhppoted-app-s3/log"
+	"codeberg.org/uhppoted/uhppoted-app-s3/log"
 )
 
 var StoreACLCmd = StoreACL{
@@ -160,9 +160,9 @@ func (cmd *StoreACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.D
 
 	makeTSV := func() error {
 		if cmd.withPIN {
-			return acl.MakeTSVWithPIN(list, devices, &w)
+			return acl.MakeTSV(list, devices, true, false, &w)
 		} else {
-			return acl.MakeTSV(list, devices, &w)
+			return acl.MakeTSV(list, devices, false, false, &w)
 		}
 	}
 

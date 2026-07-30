@@ -14,21 +14,25 @@ clean:
 	go clean
 	rm -rf bin
 
+push:
+	git push
+	git push bitbucket
+
 update:
-	go get -u github.com/uhppoted/uhppote-core@main
-	go get -u github.com/uhppoted/uhppoted-lib@main
+	go get -u codeberg.org/uhppoted/uhppoted-core@main
+	go get -u codeberg.org/uhppoted/uhppoted-lib@main
 	go mod tidy
 	go fix ./...
 
 update-release:
-	go get -u github.com/uhppoted/uhppote-core
-	go get -u github.com/uhppoted/uhppoted-lib
+	go get -u codeberg.org/uhppoted/uhppoted-core
+	go get -u codeberg.org/uhppoted/uhppoted-lib
 	go mod tidy
 	go fix ./...
 
 update-all:
-	go get -u github.com/uhppoted/uhppote-core
-	go get -u github.com/uhppoted/uhppoted-lib
+	go get -u codeberg.org/uhppoted/uhppoted-core
+	go get -u codeberg.org/uhppoted/uhppoted-lib
 	go get -u github.com/aws/aws-sdk-go
 	go get -u golang.org/x/sys
 	go get -u golang.org/x/crypto
@@ -123,7 +127,7 @@ version: build
 	$(CMD) version
 
 load-acl-http: build
-	$(CMD) load-acl --keys ../runtime/acl --url "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true"
+	$(CMD) load-acl --keys ../runtime/acl --url "https://codeberg.org/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true"
 
 load-acl-s3: build
 	$(CMD) load-acl --strict --keys ../runtime/acl --credentials "../runtime/.credentials.test" --url "s3://uhppoted-test/simulation/QWERTY54.tar.gz"
@@ -156,7 +160,7 @@ compare-acl-http: build
 	$(CMD) compare-acl \
 	       --keys   ../runtime/acl \
 	       --key    ../runtime/acl/uhppoted \
-	       --acl    "https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true" \
+	       --acl    "https://codeberg.org/uhppoted/uhppoted/blob/master/runtime/simulation/QWERTY54.tar.gz?raw=true" \
 	       --report "http://localhost:8080/upload/report.tar.gz"
 
 compare-acl-s3: build

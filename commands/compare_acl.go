@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-lib/acl"
-	"github.com/uhppoted/uhppoted-lib/config"
-	"github.com/uhppoted/uhppoted-lib/eventlog"
+	"codeberg.org/uhppoted/uhppoted-core/uhppote"
+	"codeberg.org/uhppoted/uhppoted-lib/acl"
+	"codeberg.org/uhppoted/uhppoted-lib/config"
+	"codeberg.org/uhppoted/uhppoted-lib/eventlog"
 
-	"github.com/uhppoted/uhppoted-app-s3/log"
+	"codeberg.org/uhppoted/uhppoted-app-s3/log"
 )
 
 var CompareACLCmd = CompareACL{

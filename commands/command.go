@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 
-	"github.com/uhppoted/uhppoted-app-s3/log"
+	"codeberg.org/uhppoted/uhppoted-app-s3/log"
 )
 
 const APP = "uhppoted-app-s3"

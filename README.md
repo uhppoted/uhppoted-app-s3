@@ -21,7 +21,7 @@ Supported operating systems:
 
 ## Installation
 
-Executables for all the supported operating systems are packaged in the [releases](https://github.com/uhppoted/uhppoted-app-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhppoted](https://github.com/uhppoted/uhppoted/releases) releases.
+Executables for all the supported operating systems are packaged in the [releases](https://codeberg.org/uhppoted/uhppoted-app-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhppoted](https://codeberg.org/uhppoted/uhppoted/releases) releases.
 
 Installation is straightforward - download the archive and extract it to a directory of your choice and then place the executable in a directory in your PATH. The `uhppoted-app-s3` utility requires the following additional 
 files:
@@ -34,10 +34,10 @@ files:
 ### `uhppoted.conf`
 
 `uhppoted.conf` is the communal configuration file shared by all the `uhppoted` project modules and is (or will 
-eventually be) documented in [uhppoted](https://github.com/uhppoted/uhppoted). `uhppoted-app-s3` requires the 
+eventually be) documented in [uhppoted](https://codeberg.org/uhppoted/uhppoted). `uhppoted-app-s3` requires the 
 _devices_ section to resolve non-local controller IP addresses and door to controller door identities.
 
-A sample [uhppoted.conf](https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.conf) file is included in the `uhppoted` distribution.
+A sample [uhppoted.conf](https://codeberg.org/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.conf) file is included in the `uhppoted` distribution.
 
 ### `aws.credentials`
 
@@ -77,14 +77,14 @@ The _key file_ is the RSA private key used by `uhppoted-app-s3` to sign uploaded
 Assuming you have `Go` and `make` installed:
 
 ```
-git clone https://github.com/uhppoted/uhppoted-app-s3.git
+git clone https://codeberg.org/uhppoted/uhppoted-app-s3.git
 cd uhppoted-app-s3
 make build
 ```
 
 If you prefer not to use `make`:
 ```
-git clone https://github.com/uhppoted/uhppoted-app-s3.git
+git clone https://codeberg.org/uhppoted/uhppoted-app-s3.git
 cd uhppoted-app-s3
 mkdir bin
 go build -trimpath -o bin ./...
@@ -96,10 +96,8 @@ The above commands build the `'uhppoted-app-s3` executable to the `bin` director
 
 | *Dependency*                                                                 | *Description*                              |
 | ---------------------------------------------------------------------------- | ------------------------------------------ |
-| [com.github/uhppoted/uhppote-core](https://github.com/uhppoted/uhppote-core) | Device level API implementation            |
-| [com.github/uhppoted-lib](https://github.com/uhppoted/uhppoted-lib)          | Shared application library                 |
 | [com.github/aws/aws-sdk-go](https://github.com/aws/aw-sdk-go)                | AWS API Go library                         |
-[ golang.org/x/sys                                                             | AWS API library dependency                 |
+| golang.org/x/sys                                                             | AWS API library dependency                 |
 | golang.org/x/lint/golint                                                     | Additional *lint* check for release builds |
 
 ## uhppoted-app-s3
@@ -135,7 +133,7 @@ The only currently supported ACL file format is TSV (tab separated values) and i
 
 The ACL file must include a column for each controller + door configured in the _devices_ section of the `uhppoted.conf` file used to configure the utility.
 
-An [example ACL file](https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.acl) is included in the full `uhppoted` distribution, along with the matching [_conf_](https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.conf) file.
+An [example ACL file](https://codeberg.org/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.acl) is included in the full `uhppoted` distribution, along with the matching [_conf_](https://codeberg.org/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.conf) file.
 
 ### `load-acl`
 
@@ -157,7 +155,7 @@ and should match a public key file in the _keys_ directory for the `uhppoted-app
 zip -c myacl.zip myacl.acl signature
 ```
 
-A sample [tar.gz](https://github.com/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.tar.gz) file is included in the full `uhppoted` distribution.
+A sample [tar.gz](https://codeberg.org/uhppoted/uhppoted/blob/master/runtime/simulation/405419896.tar.gz) file is included in the full `uhppoted` distribution.
 
 Command line:
 

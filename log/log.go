@@ -3,7 +3,7 @@ package log
 import (
 	syslog "log"
 
-	"github.com/uhppoted/uhppoted-lib/log"
+	"codeberg.org/uhppoted/uhppoted-lib/log"
 )
 
 type LogLevel int

@@ -11,13 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/uhppoted/uhppote-core/uhppote"
-	"github.com/uhppoted/uhppoted-lib/acl"
-	"github.com/uhppoted/uhppoted-lib/config"
-	"github.com/uhppoted/uhppoted-lib/eventlog"
-	"github.com/uhppoted/uhppoted-lib/lockfile"
+	"codeberg.org/uhppoted/uhppoted-core/uhppote"
+	"codeberg.org/uhppoted/uhppoted-lib/acl"
+	"codeberg.org/uhppoted/uhppoted-lib/config"
+	"codeberg.org/uhppoted/uhppoted-lib/eventlog"
+	"codeberg.org/uhppoted/uhppoted-lib/lockfile"
 
-	"github.com/uhppoted/uhppoted-app-s3/log"
+	"codeberg.org/uhppoted/uhppoted-app-s3/log"
 )
 
 var LoadACLCmd = LoadACL{
@@ -243,9 +243,9 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 
 	put := func(u uhppote.IUHPPOTE, list acl.ACL, dryrun bool) (map[uint32]acl.Report, []error) {
 		if cmd.withPIN {
-			return acl.PutACLWithPIN(u, list, dryrun)
+			return acl.PutACL(u, list, dryrun, true, false)
 		} else {
-			return acl.PutACL(u, list, cmd.dryrun)
+			return acl.PutACL(u, list, cmd.dryrun, false, false)
 		}
 	}
 
