@@ -219,7 +219,7 @@ func (cmd *LoadACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote.De
 		}
 	}
 
-	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, cmd.strict)
+	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, cmd.strict, false, false)
 	if err != nil {
 		return err
 	}

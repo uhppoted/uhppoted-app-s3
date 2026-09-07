@@ -197,7 +197,7 @@ func (cmd *CompareACL) execute(u uhppote.IUHPPOTE, uri string, devices []uhppote
 		}
 	}
 
-	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, false)
+	list, warnings, err := acl.ParseTSV(bytes.NewReader(tsv), devices, false, false, false)
 	if err != nil {
 		return err
 	}
