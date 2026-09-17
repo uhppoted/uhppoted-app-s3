@@ -1,4 +1,4 @@
-![build](https://github.com/uhppoted/uhppoted-app-s3/workflows/build/badge.svg)
+![build](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/twystd/2609d9356470acaf904386ce4a74f54e/raw/uhppoted-app-s3.json)
 
 # uhppoted-app-s3
 
@@ -15,7 +15,7 @@ Supported operating systems:
 
 ### Current Release
 
-**[v0.9.0](https://github.com/uhppoted/uhppoted-app-s3/releases/tag/v0.9.0) - 2026-01-27**
+**[v0.9.0](https://codeberg.org/uhppoted/uhppoted-app-s3/releases/tag/v0.9.0) - 2026-01-27**
 1. Updated to Go 1.25.
 
 
