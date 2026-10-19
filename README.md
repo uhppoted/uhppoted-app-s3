@@ -1,4 +1,5 @@
-![build](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/twystd/2609d9356470acaf904386ce4a74f54e/raw/uhppoted-app-s3.json)
+![build](https://github.com/uhppoted/uhppoted-app-s3/workflows/build/badge.svg)
+
 
 # uhppoted-app-s3
 
@@ -15,7 +16,7 @@ Supported operating systems:
 
 ### Current Release
 
-## [0.9.1](https://github.com/uhppoted/uhppoted-app-s3/releases/tag/v0.9.1) - 2026-10-13
+## [0.9.1](https://codeberg.org/uhppoted/uhppoted-app-s3/releases/tag/v0.9.1) - 2026-10-13
 
 _Maintenance release_.
 
@@ -26,7 +27,7 @@ _Maintenance release_.
 
 ## Installation
 
-Executables for all the supported operating systems are packaged in the [releases](https://codeberg.org/uhppoted/uhppoted-app-s3/releases). The provided archives contain the executables for all the operating systems - OS specific tarballs can be found in the [uhppoted](https://codeberg.org/uhppoted/uhppoted/releases) releases.
+Executables for all the supported operating systems are packaged in the [releases](https://codeberg.org/uhppoted/uhppoted-app-s3/releases).
 
 Installation is straightforward - download the archive and extract it to a directory of your choice and then place the executable in a directory in your PATH. The `uhppoted-app-s3` utility requires the following additional 
 files:
